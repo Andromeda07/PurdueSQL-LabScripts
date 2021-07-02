@@ -1,0 +1,360 @@
+--Question 1a
+create or replace function divide_numbers
+(
+    p_numerator IN number,
+    p_denominator IN number
+)
+return number
+is
+    v_result number (5,2);
+begin
+    v_result := p_numerator / p_denominator;
+    return (v_result);
+EXCEPTION
+
+    When Zero_divide then
+        dbms_output.put_line('Error: Attempting to divide by zero');
+        
+    When OTHERS Then
+        dbms_output.put_line('Generic Error Messsage here');
+END Divide_numbers;
+/
+-- Question 1b
+declare
+    v_number number;
+begin
+    v_number := divide_numbers(10,3);
+    dbms_output.put_line(v_number);
+EXCEPTION
+
+    When Others then
+        DBMS_OUTPUT.Put(SQLCODE);
+        DBMS_Output.put(': ');
+        DBMS_output.put_line(SUBSTR(SQLERRM,1,100));
+end;
+/
+-- Question 1c
+declare
+    v_number number;
+begin
+    v_number := divide_numbers(5,0);
+    dbms_output.put_line(v_number);
+EXCEPTION
+
+    When Others then
+        DBMS_OUTPUT.Put(SQLCODE);
+        DBMS_Output.put(': ');
+        DBMS_output.put_line(SUBSTR(SQLERRM,1,100));
+end;
+/
+-- Question 1d
+create or replace function divide_numbers
+(
+    p_numerator IN number,
+    p_denominator IN number
+)
+return number
+is
+    v_result number (5,2);
+begin
+    v_result := p_numerator / p_denominator;
+    return (v_result);
+EXCEPTION
+
+    When Zero_divide then
+        dbms_output.put_line('Error: Attempting to divide by zero');
+        return 0;
+        
+    When OTHERS Then
+        dbms_output.put_line('Generic Error Messsage here');
+        return 0;
+END Divide_numbers;
+/
+-- Question 1e
+select divide_numbers(5,0) from dual;
+/
+-- Question 2a
+create or replace function divide_numbers
+(
+    p_numerator IN number,
+    p_denominator IN number
+)
+return number
+is
+    v_result number;
+begin
+    v_result := p_numerator / p_denominator;
+    return (v_result);
+EXCEPTION
+
+    When Zero_divide then
+        DBMS_output.put_line('Exception Location: Function DIVIDE_NUMBERS');
+        dbms_output.put_line('Error: Attempting to divide by zero');
+	raise;
+        
+    When OTHERS Then
+        DBMS_output.put_line('Exception Location: Function DIVIDE_NUMBERS');
+        dbms_output.put_line('Generic Error Messsage here');
+	raise;
+END Divide_numbers;
+/
+-- Question 2b
+Declare
+    v_result number;
+begin
+    v_result := divide_numbers(5,0);
+    dbms_output.put_line(v_result);
+EXCEPTION
+    when OTHERS then
+        DBMS_output.put_line('Exception Location: Anonymous Block');
+        DBMS_OUTPUT.put_line(SQLCODE||': '|| SQLERRM);
+END;
+/
+-- Question 2c
+-- The error message from the zero_divide exception is propgated through the anonymous block
+/
+-- Question 3a
+create or replace function divide_numbers
+(
+    p_numerator IN number,
+    p_denominator IN number
+)
+return number
+is
+    v_result number;
+    Error_Zero exception;
+begin
+    if (p_denominator = 0) then
+        raise Error_zero;
+    end if;
+    v_result := p_numerator / p_denominator;
+    return (v_result);
+EXCEPTION
+
+    When Error_Zero then
+        DBMS_output.put_line('Exception Location: Function DIVIDE_NUMBERS');
+        dbms_output.put_line('Error: Attempting to divide by zero');
+        raise;
+        
+    When OTHERS Then
+        DBMS_output.put_line('Exception Location: Function DIVIDE_NUMBERS');
+        dbms_output.put_line('Generic Error Messsage here');
+        raise;
+END Divide_numbers;
+/
+Declare
+    v_result number;
+begin
+    v_result := divide_numbers(5,0);
+    dbms_output.put_line(v_result);
+EXCEPTION
+    when OTHERS then
+        DBMS_output.put_line('Exception Location: Anonymous Block');
+        DBMS_OUTPUT.put_line(SQLCODE||': '|| SQLERRM);
+END;
+/
+-- Question 4a
+CREATE TABLE LAB10_EMPLOYEE AS SELECT * FROM EMPLOYEE;
+/
+-- Question 4b
+CREATE or replace trigger TBDS_LAB10_EMPLOYEE
+    Before delete on LAB10_EMPLOYEE
+Begin
+    DBMS_OUTPUT.Put_line('Trigger fired before deleting anything from LAB10_EMPLOYEE');
+END;
+-- This trigger is defined on the database object LAB10_EMPLOYEE and fires before a row is deleted once per delete command.
+/
+-- Question 4c
+CREATE or replace trigger TBDR_LAB10_EMPLOYEE
+    Before delete on LAB10_EMPLOYEE
+    For each row
+Begin
+    DBMS_OUTPUT.Put_line('Trigger fired before deleting a row from LAB10_EMPLOYEE');
+END;
+-- This trigger is defined on the database object LAB10_EMPLOYEE and fires before a row is deleted, firing for each row deleted.
+/
+-- Question 4d
+CREATE or replace trigger TADS_LAB10_EMPLOYEE
+    After delete on LAB10_EMPLOYEE
+Begin
+    DBMS_OUTPUT.Put_line('Trigger fired after deleting anything from LAB10_EMPLOYEE');
+END;
+-- This trigger is defined on the database object LAB10_EMPLOYEE and fires after a row is deleted once per delete command.
+/
+-- Question 4e
+CREATE or replace trigger TADR_LAB10_EMPLOYEE
+    After delete on LAB10_EMPLOYEE
+    For each row
+Begin
+    DBMS_OUTPUT.Put_line('Trigger fired after deleting a row from LAB10_EMPLOYEE');
+END;
+-- This trigger is defined on the database object LAB10_EMPLOYEE and fires after a row is deleted, firing for each row deleted.
+/
+-- Question 4f
+delete from LAB10_EMPLOYEE where employeeID = '101135';
+-- All four triggers fired. The order was the trigger that fires once before anything is deleted, the trigger that fires for each row before anything is deleted, the trigger that fires for each row after anything is deleted then the trigger that fires once after anything is deleted
+/
+-- Question 4g
+-- Data was restored after the rollback, so the trigger does not implicitly perform a commit.
+/
+-- Question 4h
+delete from Lab10_employee
+where jobtitle = 'Engineer';
+-- Each Trigger fired. First the tigger before deleteing anything fired, fgollowed by the triggers for before and after fired 5 times, alternating before then after. Lastly the trigger that fires after deleting anything fired
+/
+-- Question 4i
+-- The data was restored, as I expected as it worked in question 4g
+/
+-- Question 4j
+truncate table Lab10_employee;
+-- No triggers fired
+/
+-- Question 5a
+CREATE or replace trigger TBIS_LAB10_EMPLOYEE
+    Before insert on LAB10_EMPLOYEE
+Begin
+    DBMS_OUTPUT.Put_line('Trigger fired before inserting anything from LAB10_EMPLOYEE');
+END;
+/
+CREATE or replace trigger TBIR_LAB10_EMPLOYEE
+    Before insert on LAB10_EMPLOYEE
+    For each row
+Begin
+    DBMS_OUTPUT.Put_line('Trigger fired before inserting a row from LAB10_EMPLOYEE');
+END;
+/
+CREATE or replace trigger TAIS_LAB10_EMPLOYEE
+    After insert on LAB10_EMPLOYEE
+Begin
+    DBMS_OUTPUT.Put_line('Trigger fired after inserting anything from LAB10_EMPLOYEE');
+END;
+/
+CREATE or replace trigger TAIR_LAB10_EMPLOYEE
+    After insert on LAB10_EMPLOYEE
+    For each row
+Begin
+    DBMS_OUTPUT.Put_line('Trigger fired after inserting a row from LAB10_EMPLOYEE');
+END;
+/
+-- Question 5b
+-- If I were to insert 1 row, I expect all 4 would fire once, starting with TBIS, then TBIR, then TAIR, then TAIS
+/
+-- Question 5c
+insert into Lab10_employee (EmployeeID)
+values (1);
+/
+-- Question 5d
+-- If I were to insert 40 rows, I expect all 4 would fire. First TBIS would fire once, then TBIR and TAIR would alternate firing 40 times starting with TBIR, then TAIS would fire once
+/
+-- Question 6a
+create or replace trigger RESTRICT_UPDATE
+before update of emailaddr on LAB10_EMPLOYEE
+for each row
+when (substr(NEW.emailaddr, -4) != '.com')
+begin
+    RAISE_APPLICATION_ERROR(-20111,'Email does not end with .com');
+End;
+/
+-- Question 6b
+update lab10_Employee
+set emailaddr = 'invalid.co'
+where employeeid='100001'
+/
+update lab10_Employee
+set emailaddr = 'validemail.com'
+where employeeid='100001'
+/
+-- Question 6c
+create or replace trigger RESTRICT_UPDATE
+before update of emailaddr on LAB10_EMPLOYEE
+for each row
+begin
+    if (substr(:new.emailaddr, -4) != '.com') then
+        RAISE_APPLICATION_ERROR(-20111,'Email does not end with .com');
+    end if;
+End;
+/
+-- Question 6d
+update lab10_Employee
+set emailaddr = 'invalid.co'
+where employeeid='100001'
+/
+update lab10_Employee
+set emailaddr = 'validemail.com'
+where employeeid='100001'
+/
+-- Question 7
+DROP TABLE LAB10_EMPLOYEE CASCADE CONSTRAINTS;
+/
+/* Results
+Question 1b
+3.33
+
+Question 1c
+Error: Attempting to divide by zero
+-6503: ORA-06503: PL/SQL: Function returned without value
+
+Question 1e
+DIVIDE_NUMBERS(5,0)
+-------------------
+                  0
+
+Question 2c
+Exception Location: Function DIVIDE_NUMBERS
+Error: Attempting to divide by zero
+Exception Location: Anonymous Block
+-6503: ORA-06503: PL/SQL: Function returned without value
+
+Question 3b
+Exception Location: Function DIVIDE_NUMBERS
+Error: Attempting to divide by zero
+Exception Location: Anonymous Block
+1: User-Defined Exception
+
+Question 4a
+Table LAB10_EMPLOYEE created.
+
+Question 4f
+Trigger fired before deleting anything from LAB10_EMPLOYEE
+Trigger fired before deleting a row from LAB10_EMPLOYEE
+Trigger fired after deleting a row from LAB10_EMPLOYEE
+Trigger fired after deleting anything  from LAB10_EMPLOYEE
+
+Question 4h
+5 rows deleted.
+
+Question 4j
+Table LAB10_EMPLOYEE truncated.
+
+Question 4c
+Trigger fired before inserting anything from LAB10_EMPLOYEE
+Trigger fired before inserting a row from LAB10_EMPLOYEE
+Trigger fired after inserting a row from LAB10_EMPLOYEE
+Trigger fired after inserting anything  from LAB10_EMPLOYEE
+
+Question 6b
+Error starting at line : 1 in command -
+update lab10_Employee
+set emailaddr = 'invalid.co'
+where employeeid='100001'
+Error report -
+ORA-20111: Email does not end with .com
+ORA-06512: at "WAGNE208.RESTRICT_UPDATE", line 2
+ORA-04088: error during execution of trigger 'WAGNE208.RESTRICT_UPDATE'
+
+
+1 row updated.
+
+Question 6d
+Error starting at line : 1 in command -
+update lab10_Employee
+set emailaddr = 'invalid.co'
+where employeeid='100001'
+Error report -
+ORA-20111: Email does not end with .com
+ORA-06512: at "WAGNE208.RESTRICT_UPDATE", line 3
+ORA-04088: error during execution of trigger 'WAGNE208.RESTRICT_UPDATE'
+
+
+1 row updated.
+*/

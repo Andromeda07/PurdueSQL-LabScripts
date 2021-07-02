@@ -1,0 +1,460 @@
+-- Question 1a
+Create or replace package Math_constants
+is
+    c_Pi constant number := acos(-1);
+end math_constants;
+/
+-- Question 1b
+-- acos() is the arc-cosine function, which is the inverse cosine function. The value is 3.141592.. otherwise known as pi
+/
+-- Question 1c
+begin
+DBMS_OUTPUT.PUT_LINE(math_constants.c_Pi);
+end;
+/
+-- Question 1d
+select c_Pi from math_constants;
+-- This results in an error
+/
+-- Question 1e
+create or replace function Calculate_Area
+(p_radius IN number)
+return number
+as
+v_output number;
+begin
+    v_output := math_constants.c_pi * power(p_radius,2);
+    return v_output;
+end Calculate_Area;
+/
+-- Question 1f
+select Calculate_Area(1), Calculate_Area(5), Calculate_Area(10) from dual;
+/
+-- Question 2a
+Create or replace function Parse_Firstname
+(p_fullname supplier.contactname%type)
+return varchar2
+is
+    v_firstname supplier.contactname%type;
+begin 
+    v_firstname := substr(p_fullname, 1, instr(p_fullname, ' ', 1, 1) -1);
+    return v_firstname;
+end parse_firstname;
+/
+-- Question 2b
+select parse_firstname(contactname) from supplier;
+/
+-- Question 2c
+drop function parse_firstname;
+/
+-- Question 2d
+create or replace package pkg_format_eagle_data
+is
+
+    function parse_firstname
+        (p_fullname supplier.contactname%type)
+    return varchar2;
+    
+end PKG_FORMAT_EAGLE_DATA;
+/
+-- Question 2e
+create or replace package body pkg_format_eagle_data
+is
+    function parse_firstname
+        (p_fullname supplier.contactname%type)
+    return varchar2
+    is
+        v_firstname supplier.contactname%type;
+    begin 
+        v_firstname := substr(p_fullname, 1, instr(p_fullname, ' ', 1, 1) -1);
+        return v_firstname;
+    end parse_firstname;
+    
+end pkg_format_eagle_data;
+/
+-- Question 2f
+select pkg_format_eagle_data.parse_firstname(contactname) from supplier;
+/
+-- Question 2g
+create or replace package pkg_format_eagle_data
+is
+
+    function parse_firstname
+        (p_fullname supplier.contactname%type)
+    return varchar2;
+    
+    function parse_lastname
+        (p_fullname supplier.contactname%type)
+    return varchar2;
+    
+end PKG_FORMAT_EAGLE_DATA;
+/
+-- Question 2h
+create or replace package body pkg_format_eagle_data
+is
+    function parse_firstname
+        (p_fullname supplier.contactname%type)
+    return varchar2
+    is
+        v_firstname supplier.contactname%type;
+    begin 
+        v_firstname := substr(p_fullname, 1, instr(p_fullname, ' ', 1, 1) -1);
+        return v_firstname;
+    end parse_firstname;
+    
+    function parse_lastname
+        (p_fullname supplier.contactname%type)
+    return varchar2
+    is
+        v_lasttname supplier.contactname%type;
+    begin 
+        v_lasttname := substr(p_fullname, instr(p_fullname, ' ', 1, 1) +1);
+        return v_lasttname;
+    end parse_lastname;
+    
+end pkg_format_eagle_data;
+/
+-- Question 2i
+select pkg_format_eagle_data.parse_firstname(contactname) as FirstName, pkg_format_eagle_data.parse_lastname(contactname) as LastName from supplier;
+/
+-- Question 3
+create or replace package pkg_shape_calculations
+is
+
+    function RECTANGLE_AREA
+        (p_length number,
+        p_width number)
+    return number;
+    
+    function RECTANGLE_AREA
+        (p_length number)
+    return number;
+    
+    function CIRCLE_AREA
+        (p_radius number)
+    return number;
+    
+end pkg_shape_calculations;
+/
+create or replace package body pkg_shape_calculations
+is
+    c_Pi constant number := acos(-1);
+
+    function check_value
+        (p_input number)
+    return boolean
+    is
+        v_output boolean := true;
+    begin
+        if (p_input <= 0) then
+            v_output := false;
+        end if;
+        return v_output;
+    EXCEPTION
+    When Others then
+        DBMS_OUTPUT.Put(SQLCODE);
+        DBMS_Output.put(': ');
+        DBMS_output.put(SUBSTR(SQLERRM,1,100));
+    end check_value;        
+    
+    function RECTANGLE_AREA
+        (p_length number,
+        p_width number)
+    return number
+    is
+        v_output number;
+    begin
+        if (Check_value(p_length) = false or Check_value(p_width) = false) then
+            DBMS_Output.put_line('One or more parameters are invalid. Please only enter numbers greater than 0.');
+            return -1;
+        end if;
+        v_output := p_length*p_width;
+        return v_output;
+        EXCEPTION
+        When Others then
+            DBMS_OUTPUT.Put(SQLCODE);
+            DBMS_Output.put(': ');
+            DBMS_output.put(SUBSTR(SQLERRM,1,100));
+    end RECTANGLE_AREA;
+
+    function RECTANGLE_AREA
+        (p_length number)
+    return number
+    is
+        v_output number;
+    begin
+        if (Check_value(p_length) = false) then
+            DBMS_Output.put_line('The parameter is invalid. Please only enter numbers greater than 0.');
+            return -1;
+        end if;
+        v_output := p_length*p_length;
+        return v_output;
+        EXCEPTION
+        When Others then
+            DBMS_OUTPUT.Put(SQLCODE);
+            DBMS_Output.put(': ');
+            DBMS_output.put(SUBSTR(SQLERRM,1,100));
+    end RECTANGLE_AREA;
+    
+    function Circle_AREA
+        (p_radius number)
+    return number
+    is
+        v_output number;
+    begin
+        if (Check_value(p_radius) = false) then
+            DBMS_Output.put_line('The parameter is invalid. Please only enter numbers greater than 0.');
+            return -1;
+        end if;
+        v_output := p_radius*p_radius*c_Pi;
+        return v_output;
+        EXCEPTION
+        When Others then
+            DBMS_OUTPUT.Put(SQLCODE);
+            DBMS_Output.put(': ');
+            DBMS_output.put(SUBSTR(SQLERRM,1,100));
+    end Circle_Area;        
+    
+end pkg_shape_calculations;
+/
+-- Question 3c
+create or replace package body pkg_shape_calculations
+is
+    c_Pi constant number := acos(-1);
+    
+end pkg_shape_calculations;
+-- Having a private value means it cannot be accessed by other code that does not need it, preventing unneccisary dependancies
+/
+-- Question 3f
+select pkg_shape_calculations.Rectangle_area(1,4) from dual;
+
+/*results
+Question 1c
+3.1415926535897932384626433832795028842
+
+Question 1d
+Error starting at line : 8 in command -
+select c_Pi from math_constants
+Error at Command Line : 8 Column : 18
+Error report -
+SQL Error: ORA-04044: procedure, function, package, or type is not allowed here
+04044. 00000 -  "procedure, function, package, or type is not allowed here"
+*Cause:    A procedure, function, or package was specified in an
+           inappropriate place in a statement.
+*Action:   Make sure the name is correct or remove it.
+
+Question 1f
+CALCULATE_AREA(1) CALCULATE_AREA(5) CALCULATE_AREA(10)
+----------------- ----------------- ------------------
+       3.14159265        78.5398163         314.159265
+
+Question 2b
+PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Dorthy
+Rob
+Sandy
+Timothy
+Adam
+William
+Debra
+Paul
+Kelli
+Kevin
+Loraine
+
+PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wade
+Elizabeth
+David
+Alice
+Gordon
+Jamie
+Donald
+Lance
+Gary
+Tim
+Darlene
+
+PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Pam
+Thurman
+Jennie
+Travis
+Stephen
+Yauleng
+Brenda
+
+Question 2f
+PKG_FORMAT_EAGLE_DATA.PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Dorthy
+Rob
+Sandy
+Timothy
+Adam
+William
+Debra
+Paul
+Kelli
+Kevin
+Loraine
+
+PKG_FORMAT_EAGLE_DATA.PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wade
+Elizabeth
+David
+Alice
+Gordon
+Jamie
+Donald
+Lance
+Gary
+Tim
+Darlene
+
+PKG_FORMAT_EAGLE_DATA.PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Pam
+Thurman
+Jennie
+Travis
+Stephen
+Yauleng
+Brenda
+*/
+
+Question 2i
+PKG_FORMAT_EAGLE_DATA.PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Dorthy
+Rob
+Sandy
+Timothy
+Adam
+William
+Debra
+Paul
+Kelli
+Kevin
+Loraine
+
+PKG_FORMAT_EAGLE_DATA.PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Wade
+Elizabeth
+David
+Alice
+Gordon
+Jamie
+Donald
+Lance
+Gary
+Tim
+Darlene
+
+PKG_FORMAT_EAGLE_DATA.PARSE_FIRSTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Pam
+Thurman
+Jennie
+Travis
+Stephen
+Yauleng
+Brenda
+
+29 rows selected. 
+
+
+PKG_FORMAT_EAGLE_DATA.PARSE_LASTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Beering
+Thomas
+Goodman
+Neal
+Cyr
+Newlon
+Cruz
+Smith
+Jones
+Martin
+Platt
+
+PKG_FORMAT_EAGLE_DATA.PARSE_LASTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Holle
+Clark
+Becker
+Mynhier
+Mayes
+Pickett
+Blythe
+Andrews
+Mikels
+White
+Jenkins
+
+PKG_FORMAT_EAGLE_DATA.PARSE_LASTNAME(CONTACTNAME)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Krick
+Mezzo
+Fry
+Honn
+Bird
+Depoe
+Pritchett
+
+Question 3f
+
+PKG_SHAPE_CALCULATIONS.RECTANGLE_AREA(1,4)
+------------------------------------------
+                                         4
+
+
+PKG_SHAPE_CALCULATIONS.RECTANGLE_AREA(0,4)
+------------------------------------------
+                                        -1
+DBMS Output: One or more parameters are invalid. Please only enter numbers greater than 0.
+
+
+PKG_SHAPE_CALCULATIONS.RECTANGLE_AREA(1,-4)
+-------------------------------------------
+                                         -1
+DBMS Output: One or more parameters are invalid. Please only enter numbers greater than 0.
+
+
+PKG_SHAPE_CALCULATIONS.RECTANGLE_AREA(3)
+----------------------------------------
+                                       9
+
+
+PKG_SHAPE_CALCULATIONS.RECTANGLE_AREA(-3)
+-----------------------------------------
+                                       -1
+DBMS Output: The parameter is invalid. Please only enter numbers greater than 0.
+
+
+PKG_SHAPE_CALCULATIONS.RECTANGLE_AREA(0)
+----------------------------------------
+                                      -1
+DBMS Output: The parameter is invalid. Please only enter numbers greater than 0.
+
+
+PKG_SHAPE_CALCULATIONS.CIRCLE_AREA(2)
+-------------------------------------
+                           12.5663706
+
+
+PKG_SHAPE_CALCULATIONS.CIRCLE_AREA(-2)
+--------------------------------------
+                                    -1
+DBMS Output: The parameter is invalid. Please only enter numbers greater than 0.
+
+
+PKG_SHAPE_CALCULATIONS.CIRCLE_AREA(0)
+-------------------------------------
+                                   -1
+DBMS Output: The parameter is invalid. Please only enter numbers greater than 0.

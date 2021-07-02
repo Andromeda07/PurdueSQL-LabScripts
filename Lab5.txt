@@ -1,0 +1,213 @@
+-- Question 1
+CREATE TABLE CUSTOMER_NEW AS SELECT * FROM CNIT372TA.CUSTOMER_NEW;
+ALTER TABLE CUSTOMER_NEW ADD PRIMARY KEY (CustomerID);
+/
+-- Question 2
+create view customer_new_view as
+select custname, companyname, address, city, state, postalcode, phone, emailaddr
+from customer_new;
+select * from customer_new_view;
+-- My assumption is emailaddr defines the customer
+/
+-- Question 3
+insert into customer_new_view (custname, address, city, state, postalcode)
+values ('John Doe', '401 N. Grant St.', 'West Lafayette', 'IN', '47907');
+-- You cannot add the customer as there is no customerid, the primary key for customer_new
+/
+-- Question 4
+create view customer_all as
+(select customerid, custname, companyname, address, city, state, postalcode, phone, emailaddr
+from customer_new
+union
+select customerid, custfirstname||' '||custlastname, companyname, address, city, state, postalcode, phone, emailaddr
+from customer);
+-- The customer is defined by the customerID field
+/
+-- Question 5
+insert into customer_all (custname, address, city, state, postalcode)
+values ('John Doe', '401 N. Grant St.', 'West Lafayette', 'IN', '47907');
+-- This fails as there are two tables - oracle doesn't know which one to insert into and therefore doesn't.
+/
+-- Question 6
+create view indiana_customer as
+select * from customer_new
+where state = 'IN';
+/
+-- Question 7
+insert into INDIANA_Customer (customerID, address, city, state, postalcode)  values ('C-001', '401 N. Grant St.', 'West Lafayette', 'IN', '47906');
+select * from Indiana_customer where customerID = 'C-001';
+/
+-- Question 8
+delete from Indiana_customer where customerID = 'C-001';
+select * from Indiana_customer where customerID = 'C-001';
+select * from Indiana_customer where customerID = 'C-001';
+-- when you rollback the transaction, it reverses the delete. So it deletes the record, then restores it.
+/
+-- Question 9
+delete from Customer_New;
+select * from Customer_New;
+rollback;
+select * from Customer_New;
+-- the rollback once again deletes everything then restores it.
+/
+-- Question 10
+truncate table Customer_New;
+select * from Customer_New;
+rollback;
+select * from Customer_New;
+-- Unlike delete from, truncate is a DDL operation, which oracle automatically commits after execution
+/
+-- Question 11
+grant read on customer_all to CNIT372TA;
+/
+-- Question 12
+revoke read on customer_all from CNIT372TA;
+/
+-- Question 13
+grant select, insert, delete on customer_all to CNIT372TA;
+/
+-- Question 14
+revoke select, insert, delete on customer_all from CNIT372TA;
+/
+-- Question 15
+revoke read on customer_all from wagne208;
+-- You cannot grant/revoke your own privileges, likely for security purposes
+/
+-- Question 16
+DROP TABLE CUSTOMER_NEW;
+DROP VIEW CUSTOMER_NEW_VIEW;
+DROP VIEW CUSTOMER_ALL;
+DROP VIEW INDIANA_CUSTOMER;
+/
+
+/* Results
+
+Question 1
+Table CUSTOMER_NEW created.
+
+
+Table CUSTOMER_NEW altered.
+
+Question 2
+View CUSTOMER_NEW_VIEW created.
+
+
+CUSTNAME                            COMPANYNAME                              ADDRESS                                  CITY                 ST POSTALCODE PHONE        EMAILADDR                                         
+----------------------------------- ---------------------------------------- ---------------------------------------- -------------------- -- ---------- ------------ --------------------------------------------------
+Helly Smith                                                                  953 Eden Park Dr.                        Cincinnati           OH 45202      513-639-2995 information@cincyart.org                          
+John Day                            Purdue University                        401 N. Grant St.                         West Lafayette       IN 47907      765-494-2560 johnday@purdue.edu                                
+Shannon Jing                        Purdue University                        500 Oval Dr.                             Wset Lafayette       IN 47907      765-588-7610 jing@purdue.edu                                   
+Julia Rayz                          Purdue University                        401 N. Grant St.                         West Lafayette       IN 47907      765-494-9525 jtaylor1@purdue.edu                               
+Jack Anderson                       University of Chicago                    5801 S. Ellis Ave.                       Chicago              IL 60637      773-702-8650 infocenter@uchicago.edu                           
+Kate Johnson                        Michigan University                      500 S. State St.                         Ann Arbor            MI 48109      734-764-1817 info@umich.edu                                    
+Shannon Jing                                                                 500 Oval Dr.                             West Lafayette       IN 47907      765-588-7610 tarokingu@gmail.com                               
+Jackson Williams                                                             3400 Vine St.                            Cincinnati           OH 45220                   jackwilliams@gmail.com                            
+Zack Browns                                                                  1777 E. Broad St.                        Columnbus            OH 43203      614-715-0000 zbrowns@yahoo.com                                 
+Kate Sun                                                                     405 Sagamore Pkwy S.                     Lafayette            IN 47904                   katesun@gmail.com                                 
+
+10 rows selected. 
+
+Question 3
+Error starting at line : 1 in command -
+insert into customer_new_view (custname, address, city, state, postalcode)
+values ('John Doe', '401 N. Grant St.', 'West Lafayette', 'IN', '47907')
+Error report -
+ORA-01400: cannot insert NULL into ("WAGNE208"."CUSTOMER_NEW"."CUSTOMERID")
+
+Question 4
+View CUSTOMER_ALL created.
+
+Question 5
+Error starting at line : 1 in command -
+insert into customer_all (custname, address, city, state, postalcode)
+values ('John Doe', '401 N. Grant St.', 'West Lafayette', 'IN', '47907')
+Error at Command Line : 1 Column : 13
+Error report -
+SQL Error: ORA-01732: data manipulation operation not legal on this view
+01732. 00000 -  "data manipulation operation not legal on this view"
+*Cause:    
+*Action:
+
+Question 6
+View INDIANA_CUSTOMER created.
+
+Question 7
+CUSTOMERID CUSTNAME                            COMPANYNAME                              CUSTT ADDRESS                                  CITY                 ST POSTALCODE FAX          PHONE        EMAILADDR                                         
+---------- ----------------------------------- ---------------------------------------- ----- ---------------------------------------- -------------------- -- ---------- ------------ ------------ --------------------------------------------------
+C-001                                                                                         401 N. Grant St.                         West Lafayette       IN 47906                                                                                  
+
+Question 8
+1 row deleted.
+
+no rows selected
+
+CUSTOMERID CUSTNAME                            COMPANYNAME                              CUSTT ADDRESS                                  CITY                 ST POSTALCODE FAX          PHONE        EMAILADDR                                         
+---------- ----------------------------------- ---------------------------------------- ----- ---------------------------------------- -------------------- -- ---------- ------------ ------------ --------------------------------------------------
+C-001                                                                                         401 N. Grant St.                         West Lafayette       IN 47906                                                                                  
+
+Question 9
+10 rows deleted.
+
+no rows selected
+
+Rollback complete.
+
+
+CUSTOMERID CUSTNAME                            COMPANYNAME                              CUSTT ADDRESS                                  CITY                 ST POSTALCODE FAX          PHONE        EMAILADDR                                         
+---------- ----------------------------------- ---------------------------------------- ----- ---------------------------------------- -------------------- -- ---------- ------------ ------------ --------------------------------------------------
+I-305      Helly Smith                                                                  Mrs.  953 Eden Park Dr.                        Cincinnati           OH 45202                   513-639-2995 information@cincyart.org                          
+C-301      John Day                            Purdue University                        Mr.   401 N. Grant St.                         West Lafayette       IN 47907                   765-494-2560 johnday@purdue.edu                                
+C-302      Shannon Jing                        Purdue University                        Dr.   500 Oval Dr.                             Wset Lafayette       IN 47907                   765-588-7610 jing@purdue.edu                                   
+C-303      Julia Rayz                          Purdue University                        Dr.   401 N. Grant St.                         West Lafayette       IN 47907                   765-494-9525 jtaylor1@purdue.edu                               
+C-304      Jack Anderson                       University of Chicago                    Mr.   5801 S. Ellis Ave.                       Chicago              IL 60637      773-702-4199 773-702-8650 infocenter@uchicago.edu                           
+C-305      Kate Johnson                        Michigan University                      Ms.   500 S. State St.                         Ann Arbor            MI 48109                   734-764-1817 info@umich.edu                                    
+I-301      Shannon Jing                                                                 Ms.   500 Oval Dr.                             West Lafayette       IN 47907                   765-588-7610 tarokingu@gmail.com                               
+I-302      Jackson Williams                                                             Mr.   3400 Vine St.                            Cincinnati           OH 45220                                jackwilliams@gmail.com                            
+I-303      Zack Browns                                                                  Mr.   1777 E. Broad St.                        Columnbus            OH 43203                   614-715-0000 zbrowns@yahoo.com                                 
+I-304      Kate Sun                                                                     Ms.   405 Sagamore Pkwy S.                     Lafayette            IN 47904                                katesun@gmail.com                                 
+
+10 rows selected. 
+
+Question 10
+Table CUSTOMER_NEW truncated.
+
+no rows selected
+
+Rollback complete.
+
+no rows selected
+
+Question 11
+Grant succeeded.
+
+Question 12
+Revoke succeeded.
+
+Question 13
+Grant succeeded.
+
+Question 14
+Revoke succeeded.
+
+Question 15
+Error starting at line : 1 in command -
+revoke read on customer_all from wagne208
+Error report -
+ORA-01749: you may not GRANT/REVOKE privileges to/from yourself
+01749. 00000 -  "you may not GRANT/REVOKE privileges to/from yourself"
+*Cause:    
+*Action:
+
+Question 16
+Table CUSTOMER_NEW dropped.
+
+
+View CUSTOMER_NEW_VIEW dropped.
+
+
+View CUSTOMER_ALL dropped.
+
+
+View INDIANA_CUSTOMER dropped.
+
+*/

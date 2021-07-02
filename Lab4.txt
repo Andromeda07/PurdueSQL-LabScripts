@@ -1,0 +1,686 @@
+-- Question 1
+select customerID from custorder
+minus
+select customerID from customer;
+-- I expected to find none, as all customerIDs in orders must match customerIDs in the customer table due to the primary key foreign key relationship. To find any would mean the integrity of the data is comprimised
+/
+-- Question 2
+select partnumber from custorderline
+minus
+select partnumber from inventorypart;
+-- I didn't expect to find any records, as any records found would violate the primary/foreign key relationship and mean the integrity of the data is compromised.
+/
+-- Question 3
+select employeeid from packingslip
+minus
+select employeeid from employee;
+-- No orphaned employees
+/
+-- Question 4
+select shipmentid from packingslip
+minus
+select shipmentid from shipment;
+-- no orphans here
+/
+-- Question 5
+create table Person_of_Interest(
+name varchar2(40), company_name varchar2(40), telephone varchar2(12), email_address varchar2(50)
+);
+/
+-- Question 6
+select custfirstname ||' '|| custlastname as Name, phone, emailaddr, nvl(companyname,'Not on record')
+from customer
+union 
+select firstname||' '||lastname as Name, homephone, emailaddr, 'Eagle Electronics' as companyname
+from employee
+union
+select contactname, phone, emailaddr, nvl(companyname, 'Not on record')
+from supplier;
+/
+-- Question 7
+insert into Person_of_Interest select Name, companyname, phone, emailaddr from
+(
+select custfirstname ||' '|| custlastname as Name, phone, emailaddr, nvl(companyname,'Not on record') as companyname
+from customer
+union 
+select firstname||' '||lastname as Name, homephone as phone, emailaddr, 'Eagle Electronics' as companyname
+from employee
+union
+select contactname as Name, phone, emailaddr, nvl(companyname, 'Not on record') as companyname
+from supplier
+);
+/
+-- Question 8
+update Person_of_Interest set email_address = 'none on record' where email_address is null;
+select * from person_of_interest where email_address is null;
+/
+-- Question 9
+delete from person_of_interest where company_name = 'none on record';
+select * from person_of_interest where company_name = 'none on record';
+/
+-- Question 10
+truncate table person_of_interest;
+/
+-- Question 11
+create table Copy_Customer
+as (select * from customer);
+/
+-- Question 12
+insert into Copy_customer (customerID, companyname, custfirstname, custlastname, custtitle, city, state)
+values ('Z-12345', 'Quick Stop', 'Randal', 'Graves', 'Mr.', 'Leonardo', 'NJ'); -- the state is NJ because 'New Jersey' is too large to fit in the column
+Select * from copy_customer where customerID = 'Z-12345';
+/
+-- Question 13
+update copy_customer
+set postalcode='07737'
+where customerid='Z-12345';
+/
+-- Question 14
+delete from copy_customer
+where state='OH';
+select * from copy_customer where state='OH';
+/
+-- Question 15
+delete from copy_customer
+where customerID='Z-12345';
+select * from copy_customer where customerID='Z-12345';
+/
+-- Question 16
+update copy_customer
+set state = 'NJ', city = 'Leonardo';
+select * from copy_customer where city != 'Leonardo' or state != 'NJ';
+/
+-- Question 17
+create table Employee_bottom_25(
+employee_id varchar2(10), employee_name varchar(36), job_title varchar2(35), salary number(9,2));
+create table Employee_others(
+employee_id varchar2(10), employee_name varchar(36), job_title varchar2(35), salary number(9,2));
+create table Employee_top_10(
+employee_id varchar2(10), employee_name varchar(36), job_title varchar2(35), salary number(9,2));
+/
+-- Question 18
+insert all
+when salarywage < (select avg(salarywage)*0.25 from employee) then
+into employee_bottom_25
+when salarywage > (select ((max(salarywage)-min(salarywage))*0.9)+min(salarywage) from employee) then
+into employee_top_10
+else into employee_others
+select employee_id, firstname||' '||lastname, jobtitle, salarywage
+from employee;
+/
+-- Question 19
+delete from Employee_bottom_25;
+delete from Employee_Top_10;
+delete from Employee_others;
+/
+-- Question 20
+create table Employee_top_1(
+employee_id varchar2(10), employee_name varchar(36), job_title varchar2(35), salary number(9,2));
+/
+-- Question 21
+insert all
+when salarywage < (select avg(salarywage)*0.25 from employee) then
+into employee_bottom_25
+when salarywage > (select ((max(salarywage)-min(salarywage))*0.9)+min(salarywage) from employee) then
+into employee_top_10
+when salarywage > (select ((max(salarywage)-min(salarywage))*0.99)+min(salarywage) from employee) then
+into employee_top_1
+else into employee_others
+select employeeid, firstname||' '||lastname, jobtitle, salarywage
+from employee;
+-- insert first inserts the row into the first it applys to, while insert all inserts into all it applys to. If you have a record that fits in multiple tables in your conditional insertion, insert all will insert it into all the tables it can fit in, while insert first inserts it into the first table it can fit in. Therefore to achive the required overlap, we need insert all
+select * from employee_top_10;
+select * from employee_top_1; -- you only need to check that these have the overlap, the bottom 25 and others tables will be unchanged from Q18
+/
+-- Question 22
+update employee_top_1
+set salary = salary*1.2;
+select * from employee_top_1;
+/
+-- Question 23
+insert into employee_top_1 
+values ('101', 'Happy Owner', 'Big Boss', 1000000);
+/
+-- Question 24
+merge into employee_top_10 t
+using (select * from employee_top_1) o
+on (t.employee_id = o.employee_id)
+when matched then
+update set t.salary = o.salary
+when not matched then
+insert values (o.employee_id, o.employee_name, o.job_title, o.salary);
+select * from employee_top_10;
+/
+-- Question 25
+DROP TABLE COPY_CUSTOMER CASCADE CONSTRAINTS;
+DROP TABLE PERSON_OF_INTEREST CASCADE CONSTRAINTS;
+DROP TABLE EMPLOYEE_TOP_10 CASCADE CONSTRAINTS;
+DROP TABLE EMPLOYEE_TOP_1 CASCADE CONSTRAINTS;
+DROP TABLE EMPLOYEE_BOTTOM_25 CASCADE CONSTRAINTS;
+DROP TABLE EMPLOYEE_OTHERS CASCADE CONSTRAINTS;
+/
+
+/* Results
+
+Question 1
+no rows selected
+
+Question 2
+no rows selected
+
+Question 3
+no rows selected
+
+Question 4
+no rows selected
+
+Question 5
+Table PERSON_OF_INTEREST created.
+
+Question 6
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Adam Cyr                             315-474-5634 acyr@cablesany.com                                 Cables Anywhere                         
+Alice Mynhier                        303-696-0557 almyn@Nway.magcomp.com                             Magic Components                        
+Allen Robles                         644-730-8090 copy@onlineservice.com                             Copy Center                             
+Allison Roland                       929-498-4174 alley@onlineservice.com                            Not on record                           
+Allison Roland                       929-498-4174                                                    Eagle Electronics                       
+Amy Heide                            802-894-1024 letout@usol.com                                    Outlets                                 
+Andrea Griswold                      970-746-0995 andygwold@usol.com                                 Not on record                           
+Andrea Montgomery                    349-397-7772                                                    Not on record                           
+Andrew Ray                           609-345-9680 andyray@usol.com                                   Not on record                           
+Andrew Smith                         709-307-2568 smokey@zeronet.net                                 Not on record                           
+Andrew Yelnick                       517-803-5818 family@free.com                                    Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Andy Huegel                          302-620-1366                                                    Not on record                           
+Angela Wainscott                     208-788-4112 awainscott@free.com                                Not on record                           
+Angie Hoover                         307-459-4165 ahoover@free.com                                   Goodwork Corporation                    
+Anita Pastron                        901-796-4654 contracts@fast.com                                 Industrail Contracting Co               
+Anna Mayton                          888-451-1233 doctor@free.com                                    Not on record                           
+Anne Hatzell                         302-651-6440 hazel@zeronet.net                                  Not on record                           
+Ansel Farrell                        712-440-3934 prickly@onlineservice.com                          Not on record                           
+Archie Doremski                      307-944-8959 sheetz@free.com                                    Greenpart Steet Metal                   
+Aricka Bross                         419-676-9758 placetolive@free.com                               Apartment Referrals                     
+Austin Ortman                        919-774-9999                                                    Eagle Electronics                       
+Beth Zobitz                          919-747-8404 bzobitz@eagle.com                                  Eagle Electronics                       
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Bill Umbarger                        207-155-1577 cheezy@onlineservice.com                           Not on record                           
+Bob Weldy                            571-490-6449 sucker42@usol.com                                  Not on record                           
+Brad Arquette                        775-914-4294 arq@usol.com                                       Not on record                           
+Brenda Jones                         720-800-2638 show@free.com                                      Not on record                           
+Brenda Kitchel                       804-214-8732 cheesman@zeronet.net                               Cheesman Corporation                    
+Brenda Pritchett                     302-696-1000 bpritchett@wizelec.com                             Wizard Electronics                      
+Bridgette Kyger                      301-467-6480 homeloans@fast.com                                 Sampson Home Mortgages                  
+Brittany Cottingham                  419-464-5273 plastic@onlineservice.com                          Cottingham Plastics                     
+Bruce Fogarty                        598-791-1420 photoniche@usol.com                                Photography Niche                       
+Bryan Price                          804-674-9666                                                    Not on record                           
+Calie Zollman                        929-763-2047                                                    Eagle Electronics                       
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Carey Dailey                         728-896-2767 shelty@usol.com                                    Not on record                           
+Carl Dallas                          864-541-5114 analyzeh20@fast.com                                Water Analysts                          
+Carl Hague                           419-890-3531                                                    Not on record                           
+Carrie Buchko                        817-739-1335 goobert@free.com                                   Not on record                           
+Cathy Bending                        765-617-2811 rrair@zeronet.net                                  R and R Air                             
+Cathy Harvey                         336-477-0249 findwork@onlineservice.com                         The Employment Agency                   
+Cecil Scheetz                        207-679-9822 cecil@free.com                                     Tippe Inn                               
+Charlene Franks                      307-892-2938 learn@rydell.edu                                   Rydell High School                      
+Charles Jones                        919-774-5552 charlie@usol.com                                   Not on record                           
+Charles Jones                        919-774-5552 cjones@eagle.com                                   Eagle Electronics                       
+Chas Funk                            860-498-3900 duck@usol.com                                      Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Chris Dunlap                         307-473-2281                                                    Not on record                           
+Christina Wilson                     316-210-8989                                                    Not on record                           
+Dan Lageveen                         307-344-8928 veenie@zeronet.net                                 Not on record                           
+Daniel Barton                        915-894-8034 dannie@zeronet.net                                 Not on record                           
+Daniel Ezra                          207-744-1997 swim@zeronet.net                                   Pools For You                           
+Daniel Hundnall                      918-830-9731 fixit@usol.com                                     Bobs Repair Service                     
+Daniel Rodkey                        719-748-3205 dannie@free.com                                    Not on record                           
+Daniel Stabnik                       636-746-4124                                                    Not on record                           
+Danita Sharp                         360-650-5604 girlfriend@fast.com                                Not on record                           
+Darlene Jenkins                      678-490-5461 DarJen@Germ.opticimag.com                          Optical Images                          
+David Becker                         843-646-4187 BeckerDavid@Loadiu.com                             Load It Up                              
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+David Chang                          740-750-1272 lion@free.com                                      Not on record                           
+David Deppe                          919-747-5155                                                    Eagle Electronics                       
+David Keck                           919-747-9921                                                    Eagle Electronics                       
+David Schilling                      502-421-1516                                                    Not on record                           
+David Smith                          309-980-4350 emerald@onlineservice.com                          Not on record                           
+David Tarter                         518-500-0570 estate@fast.com                                    Realty Specialties                      
+David Tietz                          651-912-1583 tietz@free.com                                     Not on record                           
+Dean Eagon                           970-581-8611                                                    Not on record                           
+Dean Katpally                        808-799-3727 phonecorp@usol.com                                 Phone Corporation                       
+Debra Cruz                           812-547-7359 Debra@Francomp.com                                 Computer Fundamentals                   
+Dennis Drazer                        253-315-4247 dollarplan@usol.com                                Financial Planning Consul               
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Dennis Eberle                        515-708-1802 deber@free.com                                     Not on record                           
+Dennis Mundy                         603-306-0774 rino@usol.com                                      Not on record                           
+Dennis Sammons                       616-544-1969 repairit@free.com                                  Gards Auto Repair                       
+Don Kaleta                           724-695-2157 stud@zeronet.net                                   Not on record                           
+Don Torres                           706-649-6375 drill@usol.com                                     Down Deep Drilling Inc.                 
+Donald Blythe                        520-486-6025 Dblythe@makenoise.com                              Make Some Noise Inc.                    
+Dorlan Bresnaham                     603-497-7374 dorlan@usol.com                                    Not on record                           
+Dorthy Beering                       213-465-4900 dbeering@actual.com                                Actual  Computers                       
+Doug Blizzard                        228-646-5114 collectit@onlineservice.com                        Collectibles Inc.                       
+Dusty Jones                          674-727-0511 rr@usol.com                                        Railroad Express                        
+Edna Lilley                          929-498-2840 elilley@eagle.com                                  Eagle Electronics                       
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Elizabeth Clark                      646-846-6232 eclark.com                                         Luxury Laptops                          
+Elizabeth Derhammer                  785-970-9916 lizzy@onlineservice.com                            Not on record                           
+Elizabeth Henderson                  449-486-8018                                                    Not on record                           
+Eric Becker                          910-717-7613 daddyo@usol.com                                    Not on record                           
+Eric Fannon                          209-980-0812 ef@free.com                                        Not on record                           
+Eric Quintero                        812-805-1588 diamond@onlineservice.com                          Not on record                           
+Eugene Gasper                        705-580-6124 medcare@fast.com                                   Regency Hospital                        
+Evelyn Cassens                       302-762-9526 dr.animal@onlineservice.com                        Vets Inc.                               
+Frank Aamodt                         898-762-8741 fa@fast.com                                        Franklin Trinkets                       
+Frank Malady                         574-493-0510 frankmala@zeronet.net                              Not on record                           
+Gabrielle Stevenson                  929-763-4873 gstevenson@eagle.com                               Eagle Electronics                       
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Gary German                          919-774-3325 ggerman@eagle.com                                  Eagle Electronics                       
+Gary Kempf                           937-724-7313 kempfg@free.com                                    Not on record                           
+Gary Mikels                          505-660-9632 GaryMikels@Swiss.Alliance.com                      Networking Alliance                     
+Geo Schofield                        228-480-9751 cleanit@usol.com                                   Cleaning Supply                         
+George Purcell                       432-320-6905 design@zeronet.net                                 BMA Advertising Design                  
+George Trenkle                       856-267-7913 cold@fast.com                                      Not on record                           
+Gerald Campbell                      431-087-1044 gcampbell@free.com                                 Not on record                           
+Ginger Xiao                          605-846-0451 acctsbryant@zeronet.net                            Bryant Accounting                       
+Gordon Mayes                         207-634-1969 Gordon@den.modmagic.com                            Modem Magicians                         
+Gregory Abbott                       812-447-3621 greggie@usol.com                                   Baker and Company                       
+Gregory Hettinger                    929-498-7144                                                    Eagle Electronics                       
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Heather Wallpe                       816-433-9799 flex@onlineservice.com                             Reflexions Manufacturing                
+Heather Waters                       869-741-7817 dates@free.com                                     Happytime Escort Service                
+Helene Ziekart                       203-244-9192                                                    Not on record                           
+Hugo Gillespie                       785-981-0669 critters@free.com                                  Wadake Critters                         
+Irene Poczekay                       401-461-9567                                                    Not on record                           
+Jack Akers                           301-454-6061 pizazz@usol.com                                    Not on record                           
+Jack Barrick                         786-494-4782 1natbank@free.com                                  First National Bank                     
+Jack Brose                           919-486-5104                                                    Eagle Electronics                       
+Jack Illingworth                     914-748-9829 illing@free.com                                    Not on record                           
+Jacob Richer                         425-942-3763 laugh@free.com                                     Not on record                           
+James Gross                          908-879-8672 jgross@fast.com                                    Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+James Jones                          971-522-5851 puffy@fast.com                                     Not on record                           
+James King                           207-708-3317 jamesk@usol.com                                    Not on record                           
+James Laake                          613-785-7063                                                    Not on record                           
+James Schilling                      319-429-9772                                                    Not on record                           
+Jamie Osman                          919-486-2519 josman@eagle.com                                   Eagle Electronics                       
+Jamie Pickett                        937-147-2569 jpickett@machinemiracle.com                        Miracle Machines                        
+Jamie Thompson                       706-471-1222 jthompson@onlineservice.com                        Not on record                           
+Jane Mumford                         270-428-5866                                                    Not on record                           
+Jared Meers                          701-371-1701 rehabsouth@zeronet.net                             South Street Rehabilitation             
+Jason Krasner                        919-774-7920                                                    Eagle Electronics                       
+Jason Laxton                         978-860-2824 coondog@usol.com                                   Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Jason Wendling                       919-774-6798 jwendling@eagle.com                                Eagle Electronics                       
+Jay Hanau                            773-490-8254                                                    Not on record                           
+Jeff Kowaiski                        212-492-5644 equipit@usol.com                                   Quality Equipment Corp.                 
+Jeffery Jordan                       509-989-9996 seeya@usol.com                                     Not on record                           
+Jennie Fry                           806-456-6285 Jfry@yourparts.com                                 Pick Your Parts                         
+Jennifer Hundley                     304-713-3298 jenhund@fast.com                                   Not on record                           
+Jennifer Kmec                        443-542-1386 dancingk@free.com                                  Kelly Dance Studio                      
+Jerry Mennen                         520-306-8426 mennenj@free.com                                   Not on record                           
+Jerry Muench                         464-669-8537 redhot@onlineservice.com                           Not on record                           
+Jessica Cain                         517-901-2610                                                    Not on record                           
+Jessica Nakamura                     605-324-2193 carsell@usol.com                                   Automart                                
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Jim Lichty                           618-847-1904 bankrupt@usol.com                                  Bankruptcy Help                         
+Jim Manaugh                          919-747-5603 jmanaugh@eagle.com                                 Eagle Electronics                       
+Jim Manaugh                          919-747-5603 jmanaugh@eagle.com                                 Not on record                           
+Jim Sokeland                         723-366-1117 employment@zeronet.net                             Powerful Employment                     
+Jim Webb                             978-204-3019                                                    Not on record                           
+Jo Jacko                             856-752-7471                                                    Not on record                           
+Joan Hedden                          501-710-0658                                                    Not on record                           
+Joanne Rosner                        919-486-2822                                                    Eagle Electronics                       
+John Garcia                          207-311-0174 jgar@onlineservice.com                             Not on record                           
+John McGinnis                        208-741-1963 john@zeronet.net                                   Not on record                           
+John Skadberg                        513-282-3919 skad@zeronet.net                                   Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Jon Clute                            480-181-8940                                                    Not on record                           
+Jonathon Blanco                      902-226-1858 hammer@free.com                                    Not on record                           
+Joseph Platt                         929-763-5228                                                    Eagle Electronics                       
+Joseph Schuman                       330-209-1273                                                    Not on record                           
+Joshua Cole                          865-269-7782 fido@zeronet.net                                   Not on record                           
+Juicheng Nugent                      802-352-8923 nugent@fast.com                                    Not on record                           
+Kara Orze                            414-773-1017 appinc@zeronet.net                                 Appliances Inc.                         
+Karen Burns                          707-598-2670 burnskaren@fast.com                                Recreation Supply                       
+Karen Mangus                         863-623-0459 missright@onlineservice.com                        Not on record                           
+Karen Marko                          580-555-1871 marko@usol.com                                     Not on record                           
+Karen Randolph                       603-744-9002 cookin@zeronet.net                                 Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Kathleen Plyman                      507-543-2052 needles@onlineservice.com                          Needle Center                           
+Kathleen Xolo                        929-763-5513 kxolo@eagle.com                                    Eagle Electronics                       
+Kathryn Deagen                       919-747-9164                                                    Eagle Electronics                       
+Kathy Gunderson                      941-330-3314                                                    Not on record                           
+Kelli Jones                          912-647-0391 kjoneskelli@DCI.com                                Dot Com Incorporated                    
+Kelly Jordan                         727-951-7737 supplycrafts@fast.com                              Supplying Crafts                        
+Kenneth Mintier                      323-673-0690 builder@usol.com                                   Not on record                           
+Kenneth Wilcox                       515-872-8848 kenny@onlineservice.com                            Not on record                           
+Kevin Jackson                        225-624-2341                                                    Not on record                           
+Kevin Martin                         606-677-9789 kmartin@easyaccess.com                             Easy Accessories                        
+Kevin Zubarev                        208-364-3785 sign3@fast.com                                     Signs Signs Signs                       
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Kimber Spaller                       878-119-5448 mcgimmie@zero.net                                  Not on record                           
+Kris Shinn                           469-740-2748 shinnk@zeronet.net                                 Not on record                           
+Kristen Gustavel                     919-747-1530 kgustavel@eagle.com                                Eagle Electronics                       
+Kristey Moore                        919-486-6765                                                    Eagle Electronics                       
+Kristy Moore                         919-486-6765 fluffy@onlineservice.com                           Not on record                           
+Lance Andrews                        972-534-7322 LanceA@braz.monitorU.com                           Monitors for You                        
+Larry Gardiner                       225-313-6268 square@onlineserveice.com                          Not on record                           
+Larry Osmanova                       541-905-4819 citybus@fast.com                                   City Bus Transport                      
+Laura Rodgers                        929-763-0691                                                    Eagle Electronics                       
+Lawrence Pullen                      644-591-3243 laurie@free.com                                    Not on record                           
+Linda Bowen                          605-234-4114                                                    Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Linda Hari                           270-411-2316                                                    Not on record                           
+Linda Li                             203-744-4677 ll@free.com                                        Not on record                           
+Lisa Pettry                          702-799-7272 lpett@zeronet.net                                  Not on record                           
+Loraine Platt                        520-475-5322 LoraineP@ComponGerm.com                            Greatest Components                     
+Lou Caldwell                         606-901-1238 lucky@fast.com                                     Not on record                           
+Louise Cool                          208-956-0698                                                    Not on record                           
+Lucille Appleton                     914-497-2160 muscle@zeronet.net                                 Not on record                           
+Lynne Lagunes                        208-502-9976 hello@zeronet.net                                  Not on record                           
+Marc Williams                        435-774-4595 peanut@fast.com                                    Not on record                           
+Marjorie Vandermay                   308-489-1137 nam@fast com                                       National Art Museum                     
+Marla Reeder                         728-442-3031 reedmar@zeronet.net                                Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Marty Fay                            501-631-3727 sparky@free.com                                    Not on record                           
+Mary Ann Rausch                      307-944-3324 spiritual@free.com                                 Not on record                           
+Mary Deets                           808-562-4081 camphere@fast.com                                  Camping Supplies                        
+Mary Jo Wales                        852-441-4984 jomary@onlineservice.com                           Not on record                           
+Mary Uhl                             803-974-2809 mouse@fast.com                                     Flowers by Mickey                       
+Matt Nakanishi                       435-710-5324 nakan@free.com                                     Not on record                           
+Matt Shade                           623-422-6616 shadtree@free.com                                  Not on record                           
+Matt Smith                           719-822-8828 matsm@fast.com                                     Not on record                           
+Matthew Quant                        910-577-1319 walker@onlineservice.com                           Not on record                           
+Meghan Tyrie                         919-747-8589 mtyrie@eagle.com                                   Eagle Electronics                       
+Melissa Alvarez                      919-747-3781                                                    Eagle Electronics                       
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Melody Fazal                         760-877-4849 melfazal@zeronet.net                               Not on record                           
+Meredith Rushing                     606-608-2105 merry@free.com                                     Not on record                           
+Michael Abbott                       919-774-2720 mabbott@eagle.com                                  Eagle Electronics                       
+Michael Emore                        352-472-1224 mikemore@usol.com                                  Not on record                           
+Michael Tendam                       406-424-7496 flute@usol.com                                     Not on record                           
+Michelle Nairn                       919-486-6919                                                    Eagle Electronics                       
+Michelle Oakley                      978-514-5425 littleone@usol.com                                 Not on record                           
+Mike Condie                          336-211-1238 kidrec@zeronet.net                                 Kids Recreation Inc.                    
+Mike Dunbar                          208-297-5374 duh@onlineservice.com                              Not on record                           
+Mildred Jones                        610-437-6687 compconsul@usol.com                                Computer Consultants                    
+Nancy Basham                         207-422-7135                                                    Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Nicholas Albregts                    929-763-4843                                                    Eagle Electronics                       
+Noemi Elston                         307-359-9514 closetoheaven@zeronet.net                          North Street Church                     
+Norman Fields                        501-346-4841 catv@onlineservice.com                             The Cable Company                       
+Orville Gilliland                    490-263-2957 eia@zeronet.net                                    Easy Internet Access                    
+Pam Krick                            860-624-2539 pkrick@Passoc.com                                  Printing Associated                     
+Patricha Underwood                   929-498-1956                                                    Eagle Electronics                       
+Patricia Leong                       520-247-4141 patrice@usol.com                                   Not on record                           
+Patrick Bollock                      307-635-1692 pat@fast.com                                       Not on record                           
+Paul Eckelman                        919-486-6410 peckelman@eagle.com                                Eagle Electronics                       
+Paul Kaakeh                          719-750-4539 graphit@usol.com                                   Laser Graphics Associates               
+Paul Rice                            719-541-1837 paulier@onlineservice.com                          Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Paul Smith                           219-703-2277 psmith@computervideo.comq                          Computer Video                          
+Paul Sullivan                        785-322-5896 sullie@zeronet.net                                 Not on record                           
+Peter Austin                         803-343-6063                                                    Not on record                           
+Phil Reece                           919-486-0649 sly@zeronet.net                                    Not on record                           
+Phil Reece                           919-486-0649                                                    Eagle Electronics                       
+Phillip Hession                      231-711-6837 howdy@usol.com                                     Not on record                           
+Rachel Davis                         702-907-4818 rachdav@zeronet.net                                Not on record                           
+Randall Neely                        802-319-9805 storage@fast.com                                   Store It Here                           
+Randolph Darling                     860-684-1620 randolph@fast.com                                  Not on record                           
+Randy Talauage                       347-671-2022 paintit@fast.com                                   Ceramic Supply                          
+Richard Kluth                        302-296-8012 rickkluth@free.com                                 Main St. Bar and Grill                  
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Richard Scott                        304-774-2226 kick@onlineservice.com                             Karate Made Easy                        
+Richard Stetler                      256-412-8112 screwball@free.com                                 Not on record                           
+Richard Strehle                      206-434-7305 vacation@fast.com                                  Vacation Car Rentals                    
+Richard Zito                         603-787-0787 rzito@zeronet.net                                  Not on record                           
+Rita Bush                            919-747-4397 rbush@eagle.com                                    Eagle Electronics                       
+Rob Thomas                           484-374-1998 rthomas@bestchoice.com                             Accessories and More                    
+Robert Cortez                        603-442-3740                                                    Not on record                           
+Robert Dalury                        906-278-6446 tas@zeronet.net                                    TAS                                     
+Robert Lister                        801-404-1240 fines@free.com                                     Fire Alarm Systems                      
+Ronald Day                           929-763-6488                                                    Eagle Electronics                       
+Ronald Miller                        734-820-2076 picky@zeronet.net                                  Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Rosemary Vanderhoff                  770-293-8783                                                    Not on record                           
+Roy Beer                             206-745-2584 wizzy@usol.com                                     Not on record                           
+Roy McGrew                           208-324-0783 grow@zeronet.net                                   Not on record                           
+Russ Mann                            775-549-1798 scooter@onlineservice.com                          Not on record                           
+Ruth Albeering                       784-444-0131 rabeering@free.com                                 Not on record                           
+Ruth Ball                            651-479-7538                                                    Not on record                           
+Ryan Stahley                         919-774-5340 rstahley@eagle.com                                 Eagle Electronics                       
+Ryan Stahley                         919-774-5340 rstahley@eagle.com                                 Not on record                           
+Sally Valle                          972-234-2044 roi@usol.com                                       Investment Specialties                  
+Sandy Goodman                        208-614-3136 Sgoodman@connex.com                                Connexions                              
+Sarah McCammon                       520-438-7944 squirrel@zeronet.net                               Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Scott Gray                           484-453-7105 keepsafe@zeronet.net                               Security Installation                   
+Scott Yarian                         252-310-2224 syarian@fast.com                                   Not on record                           
+Sean Akropolis                       907-262-4254 pickle@free.com                                    Not on record                           
+Sharon Rouls                         205-246-3224 irish@free.com                                     Sharons Shamrock                        
+Sherman Cheswick                     929-498-8150 scheswick@eagle.com                                Eagle Electronics                       
+Sherry Garling                       353-822-7623 homely@fast.com                                    Manufactured Homes Corp.                
+Shirley Osborne                      706-333-7174                                                    Not on record                           
+Stephanie Pearl                      660-447-8319 mommyl@fast.com                                    Not on record                           
+Stephanie Yeinick                    573-455-4278 jewels@usol.com                                    Tuckers Jewels                          
+Stephen Bird                         540-514-1415 sbird@storeit.com                                  Storage Specialties                     
+Steve Cochran                        929-763-1283                                                    Eagle Electronics                       
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Steve Fulkerson                      602-129-1885 cellcall@usol.com                                  Cellular Services                       
+Steve Hess                           919-486-8804                                                    Eagle Electronics                       
+Steven Hickman                       919-774-4874 shickman@eagle.com                                 Eagle Electronics                       
+Steven Yaun                          317-780-9804 yawn@fast.com                                      Not on record                           
+Susan Strong                         912-760-7840 fammed@onlineservice.com                           Family Medical Center                   
+Susan Watson                         801-746-7701 mswatson@fast.com                                  Not on record                           
+Tammi Baldocchio                     401-989-4975                                                    Not on record                           
+Ted Zissa                            405-151-7445                                                    Not on record                           
+Terry Xu                             417-546-2570 muffin@fast.com                                    Not on record                           
+Thomas Wolfe                         610-365-9766 wolf@onlineservice.com                             Not on record                           
+Thomas Zelenka                       603-374-3706 zelenka@free.com                                   Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Thurman Mezzo                        415-967-1415 tmezzo@playingaround.com                           Playing Around                          
+Tim Carlton                          203-608-3465                                                    Not on record                           
+Tim Leffert                          315-486-4777 trailrent@zeronet.net                              Trailor Rentals                         
+Tim Parker                           315-985-4102 jeckle@onlineservice.com                           Not on record                           
+Tim White                            517-777-1905 twhite@networkN.com                                Network Niche                           
+Timothy Neal                         704-736-9458 tneal@compAccess.com                               Computer Accessories                    
+Tina Yates                           929-763-4438 tyates@eagle.com                                   Eagle Electronics                       
+Todd Vigus                           919-486-7143 tvigus@eagle.com                                   Eagle Electronics                       
+Tom Baker                            414-778-5640 bologna@free.com                                   Not on record                           
+Tom Irelan                           240-634-5581 tucker@free.com                                    Not on record                           
+Tom Moore                            270-692-2845 seedle@fast.com                                    Not on record                           
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Tommy McFerren                       503-767-7054 mcferren@cole.com                                  Cole Sales and Associates               
+Tonya Owens                          843-773-2751                                                    Not on record                           
+Tracy Cicholski                      601-959-1315 dixpharm@free.com                                  Dixon Pharmacy                          
+Travis Camargo                       816-746-4913                                                    Not on record                           
+Travis Honn                          303-564-1515 thonn@radiant.com                                  Radiant Computers                       
+Trevor Snuffer                       336-185-0630 snuffer@zeronet.net                                Not on record                           
+Trudi Antonio                        718-747-3259 toni@onlineservice.com                             Not on record                           
+Verna McGrew                         334-547-9329 verngrew@free.com                                  Not on record                           
+Wade Holle                           887-746-6174 Wade@jLi.com                                       Just Link It                            
+Wade Jacobs                          803-477-5347 connernat@usol.com                                 Conner National                         
+William Newlon                       909-452-4936 Wnewlon@ccs.com                                    Creative Computer Solutions             
+
+NAME                                 PHONE        EMAILADDR                                          NVL(COMPANYNAME,'NOTONRECORD')          
+------------------------------------ ------------ -------------------------------------------------- ----------------------------------------
+Yauleng Depoe                        313-475-1177 ydepoe@sw.com                                      Scanning the World                      
+Zach McGrew                          520-730-8494                                                    Not on record                           
+Zack Hill                            503-794-2322 boogie@free.com                                    Not on record                           
+
+300 rows selected. 
+
+Question 7
+300 rows inserted.
+
+Question 8
+60 rows updated.
+
+no rows selected
+
+Question 9
+157 rows deleted.
+
+no rows selected
+
+Question 10
+Table PERSON_OF_INTEREST truncated.
+
+Question 11
+Table COPY_CUSTOMER created.
+
+Question 12
+1 row inserted.
+
+
+CUSTOMERID COMPANYNAME                              CUSTFIRSTNAME   CUSTLASTNAME         CUSTT ADDRESS                                  CITY                 ST POSTALCODE PHONE        FAX          EMAILADDR                                         
+---------- ---------------------------------------- --------------- -------------------- ----- ---------------------------------------- -------------------- -- ---------- ------------ ------------ --------------------------------------------------
+Z-12345    Quick Stop                               Randal          Graves               Mr.                                            Leonardo             NJ                                                                                        
+
+Question 13
+1 row updated.
+
+Question 14
+7 rows deleted.
+
+no rows selected
+
+Question 15
+1 row deleted.
+
+no rows selected
+
+Question 16
+224 rows updated.
+
+no rows selected
+
+Question 17
+Table EMPLOYEE_BOTTOM_25 created.
+
+
+Table EMPLOYEE_OTHERS created.
+
+
+Table EMPLOYEE_TOP_10 created.
+
+Question 18
+40 rows inserted.
+
+
+Question 19
+22 rows deleted.
+
+
+2 rows deleted.
+
+
+16 rows deleted.
+
+Question 20
+Table EMPLOYEE_TOP_1 created.
+
+Question 21
+41 rows inserted.
+
+
+EMPLOYEE_I EMPLOYEE_NAME                        JOB_TITLE                               SALARY
+---------- ------------------------------------ ----------------------------------- ----------
+100365     Sherman Cheswick                     President                                99900
+100650     Edna Lilley                          VP Information                           93900
+
+
+EMPLOYEE_I EMPLOYEE_NAME                        JOB_TITLE                               SALARY
+---------- ------------------------------------ ----------------------------------- ----------
+100365     Sherman Cheswick                     President                                99900
+
+Question 22
+EMPLOYEE_I EMPLOYEE_NAME                        JOB_TITLE                               SALARY
+---------- ------------------------------------ ----------------------------------- ----------
+100365     Sherman Cheswick                     President                               119880
+
+Question 23
+1 row inserted.
+
+Question 24
+2 rows merged.
+
+
+EMPLOYEE_I EMPLOYEE_NAME                        JOB_TITLE                               SALARY
+---------- ------------------------------------ ----------------------------------- ----------
+100365     Sherman Cheswick                     President                               119880
+100650     Edna Lilley                          VP Information                           93900
+101        Happy Owner                          Big Boss                               1000000
+
+Question 25
+Table COPY_CUSTOMER dropped.
+
+
+Table PERSON_OF_INTEREST dropped.
+
+
+Table EMPLOYEE_TOP_10 dropped.
+
+
+Table EMPLOYEE_TOP_1 dropped.
+
+
+Table EMPLOYEE_BOTTOM_25 dropped.
+
+
+Table EMPLOYEE_OTHERS dropped.
+*/

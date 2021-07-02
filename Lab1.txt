@@ -1,0 +1,518 @@
+-- Question 1
+select distinct substr(phone, 1, 3) from customer where state = 'CO';
+/
+-- Question 2
+select distinct substr(phone, 1, 3), count(customerid) from customer where state = 'CO' group by substr(phone,1,3) order by count(customerid) desc ;
+/
+-- Question 3
+select distinct substr(phone, 1, 3) as AreaCode
+from customer 
+where state = 'CO'
+group by substr(phone,1,3)
+having count(customerID) = (select max(count(customerid)) from customer where state = 'CO' group by substr(phone,1,3));
+/
+-- Question 4
+select custlastname||', '||custfirstname as name, city, state, phone
+from customer
+where substr(phone, 1, 3) = (select distinct substr(phone, 1, 3) as AreaCode
+from customer 
+where state = 'CO'
+group by substr(phone,1,3)
+having count(customerID) = (select max(count(customerid)) from customer where state = 'CO' group by substr(phone,1,3)));
+/
+-- Question 5
+-- The answer to question 4 tells you which customers are in the most popular area code and what cities are in that area code. This can be helpful for marketing decisions, as the marketing in that area is clearly working
+/
+-- Question 6
+select customerid, count(orderid) as orders
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid
+order by count(orderid) desc;
+/
+-- Question 7
+select count(orderid)
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid
+having count(orderid) = (select max(orderid) 
+from (select customerid, count(orderid) as orderid
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid));
+/
+-- Question 8
+select customerid, count(orderid)
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid
+having count(orderid) = (select max(orderid) 
+from (select customerid, count(orderid) as orderid
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid));
+/
+-- Question 9
+select avg(count(orderid)) as Average
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid;
+/
+-- Question 10
+select customerid, count(orderid)
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid
+having count(orderid) > (select avg(count) from (select avg(count(orderid)) as count
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid))
+order by count(orderid) desc;
+/
+-- Question 11
+select customerid, count(orderid)
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid
+having count(orderid) < (select avg(count) from (select avg(count(orderid)) as count
+from custorder
+where orderdate between to_date('2010/08/01', 'yyyy/mm/dd') and to_date('2010/08/31', 'yyyy/mm/dd')
+group by customerid))
+order by count(orderid) asc;
+/
+-- Question 12
+-- Knowing the results of 10 & 11 tell you which customers are ordering the most and therefore which customers to target with more marketing and \"limited time offers\"
+/
+-- Question 13
+select c.customerid, c.companyname, c.custlastname||', '||c.custfirstname as name, to_char(o.orderdate, 'MM-DD-YYYY') as OrderDate
+from customer c inner join custorder o on c.customerid = o.customerid
+where c.state='IN' and o.orderdate between to_date('2010/01/01', 'yyyy/mm/dd') and to_date('2010/12/31', 'yyyy/mm/dd')
+order by o.orderdate asc;
+-- datetime formatting help from http://www.sqlines.com/oracle-to-sql-server/to_char_datetime
+-- to_date and between help from https://www.techonthenet.com/oracle/between.php
+/
+-- Quesiton 14
+select c.customerid, c.companyname, c.custlastname ||', '||c.custfirstname as name, o.orderdate, o.requireddate
+from customer c inner join custorder o on c.customerid = o.customerid
+where c.customerid = 'C-300001'
+order by o.orderdate asc;
+/
+-- Question 15
+select o.orderID, p.partNumber, o.unitprice, o.orderquantity, c.categoryname
+from Custorderline o inner join inventorypart p on o.partnumber=p.partnumber inner join category c on p.categoryid = c.categoryid
+where p.partdescription='1000 BEST GAMES'
+order by o.orderquantity;
+/
+-- Question 16
+select o.orderid, l.partnumber, p.partdescription, l.unitprice, l.orderquantity
+from custorder o inner join custorderline l on o.orderid = l.orderid inner join inventorypart p on l.partnumber = p.partnumber
+where o.customerid = 'C-300001' and orderdate = to_date('2010/07/14', 'yyyy/mm/dd')
+order by l.orderquantity desc;
+/
+-- Question 17
+select to_char(o.orderdate, 'MM/DD/YYYY') as OrderDate, l.partnumber, p.partdescription, l.unitprice, l.orderquantity
+from custorder o inner join custorderline l on o.orderid = l.orderid inner join inventorypart p on l.partnumber = p.partnumber inner join customer c on c.customerid = o.customerid
+where c.companyname = 'Bankruptcy Help'  and orderdate between to_date('2011/01/01', 'yyyy/mm/dd') and to_date('2011/12/31', 'yyyy/mm/dd')
+order by o.orderdate desc, l.orderquantity desc;
+/
+-- Question 18
+select to_char(o.orderdate, 'MM/DD/YYYY') as OrderDate, l.partnumber, p.partdescription, l.unitprice, l.orderquantity, l.unitprice * l.orderquantity as LinePrice
+from custorder o inner join custorderline l on o.orderid = l.orderid inner join inventorypart p on l.partnumber = p.partnumber inner join customer c on c.customerid = o.customerid
+where c.companyname = 'Bankruptcy Help'  and orderdate between to_date('2011/01/01', 'yyyy/mm/dd') and to_date('2011/12/31', 'yyyy/mm/dd')
+order by o.orderdate desc, l.orderquantity desc;
+/
+-- Question 19
+select c.customerid, c.companyname, c.custlastname||', '||c.custfirstname as name, count(o.orderID)
+from customer c inner join custorder o on c.customerid = o.customerid
+where c.state='IN' and o.orderdate between to_date('2011/01/01', 'yyyy/mm/dd') and to_date('2011/01/31', 'yyyy/mm/dd')
+group by c.customerid, c.companyname, c.custlastname||', '||c.custfirstname
+order by count(o.orderid) asc;
+/
+-- Question 20
+select c.categoryname, round(avg(i.stocklevel), 2) as AvgStockLevel
+from category c inner join inventorypart i on c.categoryid = i.categoryid
+group by c.categoryname
+order by avg(i.stocklevel) asc;
+/
+-- Question 21
+select c.categoryname||': '||c.description as categorydetail, count(i.partnumber)
+from category c inner join inventorypart i on c.categoryid = i.categoryid
+group by c.categoryname||': '||c.description
+order by count(i.partnumber) asc;
+/
+Question 22
+select max(p.weight)
+from inventorypart p inner join category c on p.categoryid = c.categoryid
+where c.categoryname = 'Software';
+/
+Question 23
+select c.categoryname, max(p.weight)
+from inventorypart p inner join category c on p.categoryid = c.categoryid
+where c.categoryname = 'Software' or c.categoryname = 'Power' or c.categoryname = 'Storage'
+group by c.categoryname;
+/
+Question 24
+select c.categoryname, max(p.weight), p.partdescription
+from inventorypart p inner join category c on p.categoryid = c.categoryid
+where c.categoryname = 'Software' or c.categoryname = 'Power' or c.categoryname = 'Storage'
+having (max(p.weight) = (select max(p.weight)
+    from inventorypart p inner join category c on p.categoryid = c.categoryid
+    where c.categoryname = 'Software') and c.categoryname = 'Software') or (max(p.weight) = (select max(p.weight)
+    from inventorypart p inner join category c on p.categoryid = c.categoryid
+    where c.categoryname = 'Power') and c.categoryname = 'Power') or (max(p.weight) = (select max(p.weight)
+    from inventorypart p inner join category c on p.categoryid = c.categoryid
+    where c.categoryname = 'Storage') and c.categoryname = 'Storage')
+group by c.categoryname, p.partdescription
+order by c.categoryname asc;
+
+/*results
+
+Question 1
+SUB
+---
+728
+970
+720
+644
+719
+
+Question 2
+SUB COUNT(CUSTOMERID)
+--- -----------------
+719                 4
+970                 2
+644                 1
+728                 1
+720                 1
+
+Question 3
+
+ARE
+---
+719
+
+Question 4
+NAME                                  CITY                 ST PHONE       
+------------------------------------- -------------------- -- ------------
+Kaakeh, Paul                          Gunnison             CO 719-750-4539
+Rodkey, Daniel                        Lamar                CO 719-748-3205
+Smith, Matt                           Montrose             CO 719-822-8828
+Rice, Paul                            Craig                CO 719-541-1837
+
+Question 6
+CUSTOMERID     ORDERS
+---------- ----------
+C-300006            3
+I-300010            2
+I-300016            2
+I-300014            2
+C-300055            2
+C-300041            2
+C-300031            2
+I-300015            2
+C-300027            2
+C-300005            2
+C-300003            1
+
+CUSTOMERID     ORDERS
+---------- ----------
+I-300004            1
+I-300007            1
+I-300043            1
+I-300108            1
+I-300110            1
+I-300031            1
+C-300053            1
+I-300070            1
+I-300068            1
+I-300093            1
+C-300017            1
+
+CUSTOMERID     ORDERS
+---------- ----------
+I-300061            1
+C-300051            1
+C-300004            1
+I-300042            1
+I-300091            1
+I-300088            1
+C-300011            1
+I-300017            1
+C-300010            1
+I-300132            1
+I-300076            1
+
+CUSTOMERID     ORDERS
+---------- ----------
+I-300020            1
+I-300095            1
+I-300120            1
+I-300129            1
+I-300002            1
+C-300002            1
+I-300026            1
+I-300097            1
+C-300001            1
+C-300026            1
+I-300126            1
+
+CUSTOMERID     ORDERS
+---------- ----------
+I-300081            1
+I-300012            1
+I-300013            1
+I-300138            1
+I-300115            1
+I-300122            1
+I-300009            1
+C-300013            1
+C-300020            1
+I-300102            1
+I-300096            1
+
+CUSTOMERID     ORDERS
+---------- ----------
+C-300033            1
+I-300044            1
+I-300112            1
+I-300011            1
+C-300035            1
+I-300005            1
+I-300069            1
+I-300024            1
+I-300018            1
+I-300117            1
+I-300025            1
+
+Question 7
+COUNT(ORDERID)
+--------------
+             3
+
+Question 8
+CUSTOMERID COUNT(ORDERID)
+---------- --------------
+C-300006                3
+
+Question 9
+   AVERAGE
+----------
+1.16666667
+
+Question 10
+CUSTOMERID COUNT(ORDERID)
+---------- --------------
+C-300006                3
+I-300010                2
+I-300016                2
+I-300014                2
+C-300055                2
+C-300041                2
+C-300031                2
+I-300015                2
+C-300027                2
+C-300005                2
+
+Question 11
+CUSTOMERID COUNT(ORDERID)
+---------- --------------
+C-300003                1
+I-300025                1
+I-300007                1
+I-300043                1
+I-300108                1
+I-300110                1
+I-300031                1
+C-300053                1
+I-300070                1
+I-300068                1
+I-300093                1
+
+CUSTOMERID COUNT(ORDERID)
+---------- --------------
+C-300017                1
+I-300061                1
+C-300051                1
+C-300004                1
+I-300042                1
+I-300091                1
+I-300088                1
+C-300011                1
+I-300017                1
+C-300010                1
+I-300132                1
+
+CUSTOMERID COUNT(ORDERID)
+---------- --------------
+I-300076                1
+I-300020                1
+I-300095                1
+I-300120                1
+I-300129                1
+I-300002                1
+C-300002                1
+I-300026                1
+I-300097                1
+C-300001                1
+C-300026                1
+
+CUSTOMERID COUNT(ORDERID)
+---------- --------------
+I-300126                1
+I-300081                1
+I-300012                1
+I-300013                1
+I-300138                1
+I-300115                1
+I-300122                1
+I-300009                1
+C-300013                1
+C-300020                1
+I-300102                1
+
+CUSTOMERID COUNT(ORDERID)
+---------- --------------
+I-300096                1
+C-300033                1
+I-300044                1
+I-300112                1
+I-300011                1
+C-300035                1
+I-300005                1
+I-300069                1
+I-300024                1
+I-300018                1
+I-300117                1
+
+CUSTOMERID COUNT(ORDERID)
+---------- --------------
+I-300004                1
+
+Question 13
+CUSTOMERID COMPANYNAME                              NAME                                  ORDERDATE 
+---------- ---------------------------------------- ------------------------------------- ----------
+C-300001   Baker and Company                        Abbott, Gregory                       07-08-2010
+C-300001   Baker and Company                        Abbott, Gregory                       07-14-2010
+C-300001   Baker and Company                        Abbott, Gregory                       08-13-2010
+I-300030                                            Quintero, Eric                        09-15-2010
+C-300014   R and R Air                              Bending, Cathy                        10-04-2010
+C-300001   Baker and Company                        Abbott, Gregory                       12-02-2010
+I-300147                                            Yaun, Steven                          12-07-2010
+
+Question 14
+CUSTOMERID COMPANYNAME                              NAME                                  ORDERDATE REQUIREDD
+---------- ---------------------------------------- ------------------------------------- --------- ---------
+C-300001   Baker and Company                        Abbott, Gregory                       08-JUL-10 12-JUL-10
+C-300001   Baker and Company                        Abbott, Gregory                       14-JUL-10 15-JUL-10
+C-300001   Baker and Company                        Abbott, Gregory                       13-AUG-10 20-AUG-10
+C-300001   Baker and Company                        Abbott, Gregory                       02-DEC-10 08-DEC-10
+C-300001   Baker and Company                        Abbott, Gregory                       27-JAN-11 03-FEB-11
+C-300001   Baker and Company                        Abbott, Gregory                       24-FEB-11 03-MAR-11
+C-300001   Baker and Company                        Abbott, Gregory                       10-MAR-11 15-MAR-11
+
+Question 15
+ORDERID    PARTNUMBER  UNITPRICE ORDERQUANTITY CATEGORYNAME                  
+---------- ---------- ---------- ------------- ------------------------------
+2000000013 SFT-003          9.99             1 Software                      
+2000000206 SFT-003          9.99             1 Software                      
+2001000649 SFT-003          9.99             1 Software                      
+2000000095 SFT-003          9.99             1 Software                      
+2000000062 SFT-003          9.99             1 Software                      
+2000000162 SFT-003          9.99             2 Software                      
+2000000465 SFT-003          9.99             2 Software                      
+2000000440 SFT-003          9.99             6 Software                      
+2000000253 SFT-003          9.99             6 Software                      
+2000000279 SFT-003          9.99             6 Software                      
+2001000757 SFT-003          9.99            12 Software                      
+2000000381 SFT-003          9.99            15 Software                      
+2000000460 SFT-003          9.99            20 Software                      
+2001000705 SFT-003          9.99            28 Software  
+
+Question 16
+ORDERID    PARTNUMBER PARTDESCRIPTION                                     UNITPRICE ORDERQUANTITY
+---------- ---------- -------------------------------------------------- ---------- -------------
+2000000032 BRK-011    2ND PARALLEL PORT                                        5.99            20
+2000000032 CTR-019    FLY XPST                                              1717.99             9
+2000000032 ADT-003    EXTERNAL SCSI-3 MALE TERMINATOR                         39.99             8
+2000000032 CAB-027    2FT 3/1 SCSI CABLE                                      44.99             6
+2000000032 SCN-002    SCANJET BUSINESS SERIES COLOR SCANNER                     249             4
+
+Question 17
+ORDERDATE  PARTNUMBER PARTDESCRIPTION                                     UNITPRICE ORDERQUANTITY
+---------- ---------- -------------------------------------------------- ---------- -------------
+03/22/2011 BRK-002    1X4 USB CABLE AND BRACKET                                9.99            20
+03/22/2011 MEM-004    30.7GB HARD DRIVE                                      269.99            10
+03/22/2011 P-006      600 PENTIUM III PROCESSOR                              339.99             6
+02/28/2011 MOD-002    112K DUAL MODEM                                         89.99            16
+02/28/2011 MEM-001    2MB FLASH BUFFER MEMORY                                259.95            12
+02/28/2011 PRT-003    LASER JET 2500SE                                          699             3
+02/24/2011 MIC-009    WHEEL MOUSE                                              29.5            27
+02/14/2011 BB-004     SOCKET MINI BAREBONE                                   199.99             6
+02/14/2011 P-005      700 PENTIUM III PROCESSOR                              399.99             4
+
+
+Question 18
+ORDERDATE  PARTNUMBER PARTDESCRIPTION                                     UNITPRICE ORDERQUANTITY  LINEPRICE
+---------- ---------- -------------------------------------------------- ---------- ------------- ----------
+03/22/2011 BRK-002    1X4 USB CABLE AND BRACKET                                9.99            20      199.8
+03/22/2011 MEM-004    30.7GB HARD DRIVE                                      269.99            10     2699.9
+03/22/2011 P-006      600 PENTIUM III PROCESSOR                              339.99             6    2039.94
+02/28/2011 MOD-002    112K DUAL MODEM                                         89.99            16    1439.84
+02/28/2011 MEM-001    2MB FLASH BUFFER MEMORY                                259.95            12     3119.4
+02/28/2011 PRT-003    LASER JET 2500SE                                          699             3       2097
+02/24/2011 MIC-009    WHEEL MOUSE                                              29.5            27      796.5
+02/14/2011 BB-004     SOCKET MINI BAREBONE                                   199.99             6    1199.94
+02/14/2011 P-005      700 PENTIUM III PROCESSOR                              399.99             4    1599.96
+
+Question 19
+CUSTOMERID COMPANYNAME                              NAME                                  COUNT(O.ORDERID)
+---------- ---------------------------------------- ------------------------------------- ----------------
+C-300014   R and R Air                              Bending, Cathy                                       1
+C-300001   Baker and Company                        Abbott, Gregory                                      1
+I-300030                                            Quintero, Eric                                       2
+
+Question 20
+CATEGORYNAME                   AVGSTOCKLEVEL
+------------------------------ -------------
+Computers                               2.45
+Accessories                             9.21
+Power                                   10.5
+Storage                                20.47
+Basics                                  20.5
+Processors                             23.74
+Software                               33.89
+Cables                                 35.86\
+
+Question 21
+CATEGORYDETAIL                                                                                                                       COUNT(I.PARTNUMBER)
+------------------------------------------------------------------------------------------------------------------------------------ -------------------
+Power: Power Supplies                                                                                                                                  4
+Software: Games, maps                                                                                                                                  9
+Accessories: Scanners, Printers, Modems                                                                                                               14
+Processors: Athlon, Celeron, Pentium, Fans                                                                                                            19
+Storage: CD-ROM, DVD, Hard Drives, Memory                                                                                                             19
+Computers: Assembled Computers                                                                                                                        29
+Cables: Printer, Keyboard, Internal, SCSI, Connectors, Brackets                                                                                       36
+Basics: Casing, Barebone, Monitors, Keyboards, Mice                                                                                                   44
+
+Question 22
+MAX(P.WEIGHT)
+-------------
+         .438
+
+Question 23
+CATEGORYNAME                   MAX(P.WEIGHT)
+------------------------------ -------------
+Power                                      3
+Software                                .438
+Storage                                    4
+
+Question 24
+CATEGORYNAME                   MAX(P.WEIGHT) PARTDESCRIPTION                                   
+------------------------------ ------------- --------------------------------------------------
+Power                                      3 250 WATT POWER SUPPLY                             
+Power                                      3 300 WATT POWER SUPPLY                             
+Software                                .438 BOARD GAMES                                       
+Software                                .438 DESKTOP PUBLISHER                                 
+Storage                                    4 ETHERNET FIBER OPTIC MINI-TRANSCEIVER  
+*/ 

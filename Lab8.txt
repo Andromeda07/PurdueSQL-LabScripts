@@ -1,0 +1,585 @@
+-- Part A
+-- Question 1a
+Create or replace procedure print_employee_roster
+AS
+    current_employeeid employee.employeeid%type;
+    current_lastname employee.lastname%type;
+    current_firstname employee.firstname%type;
+    
+    cursor all_employees
+    is
+        select employeeid, lastname, firstname from employee;
+
+Begin
+    open all_employees;
+    
+    fetch all_employees into current_employeeid, current_lastname, current_firstname;
+    
+    while all_employees%found loop
+    
+        DBMS_output.put(RPAD(current_employeeid, 15, ' '));
+        DBMS_output.put(RPAD(current_lastname, 30, ' '));
+        DBMS_output.put_line(current_firstname);
+        fetch all_employees into current_employeeid, current_lastname, current_firstname;
+    end loop;
+    
+    close all_employees;
+    
+END print_employee_roster;
+/
+-- Question 1b
+execute print_employee_roster();
+/
+-- Question 2a
+Create or replace procedure print_employee_roster
+AS    
+    cursor all_employees
+    is
+        select employeeid, lastname, firstname from employee;
+        
+    current_employee all_employees%rowtype;
+
+Begin
+    open all_employees;
+    
+    fetch all_employees into current_employee;
+    
+    while all_employees%found loop
+    
+        DBMS_output.put(RPAD(current_employee.employeeid, 15, ' '));
+        DBMS_output.put(RPAD(current_employee.lastname, 30, ' '));
+        DBMS_output.put_line(current_employee.firstname);
+        fetch all_employees into current_employee;
+    end loop;
+    
+    close all_employees;
+    
+END print_employee_roster;
+/
+-- Question 2b
+execute print_employee_roster();
+/
+-- Question 2c
+-- current_employee is based on the row of all_employees which is based on employeeid, lastname, firstname from employee
+/
+-- Question 3a
+Create or replace procedure print_employee_roster
+AS    
+    cursor all_employees
+    is
+        select employeeid, lastname||', '|| firstname as name from employee;
+        
+    current_employee all_employees%rowtype;
+
+Begin
+    open all_employees;
+    
+    fetch all_employees into current_employee;
+    
+    while all_employees%found loop
+    
+        DBMS_output.put(RPAD(current_employee.employeeid, 15, ' '));
+        DBMS_output.put_line(current_employee.name);
+        fetch all_employees into current_employee;
+    end loop;
+    
+    close all_employees;
+    
+END print_employee_roster;
+/
+-- Question 3b
+execute print_employee_roster();
+/
+-- Question 4a
+Create or replace procedure print_employee_roster
+AS    
+    cursor all_employees
+    is
+        select employeeid, lastname||', '|| firstname as name from employee;
+
+
+Begin
+    
+    for current_employee in all_employees loop
+    
+        DBMS_output.put(RPAD(current_employee.employeeid, 15, ' '));
+        DBMS_output.put_line(current_employee.name);
+    end loop;
+    
+END print_employee_roster;
+/
+-- Question 4b
+execute print_employee_roster();
+/
+-- Question 4c
+-- the current_employee variable declaration is implicitly handled, as well as opening and closing the cursor and fetching current_employees into the cursor (although that I suspect is the for loop)
+/
+-- Question 5a
+Create or replace procedure print_employee_roster
+(p_job_title IN employee.jobtitle%type)
+AS    
+    cursor all_employees
+    is
+        select employeeid, lastname||', '|| firstname as name 
+        from employee
+        where Upper(trim(jobtitle)) = Upper(trim(p_jobtitle));
+
+Begin
+    
+    for current_employee in all_employees loop
+    
+        DBMS_output.put(RPAD(current_employee.employeeid, 15, ' '));
+        DBMS_output.put_line(current_employee.name);
+    end loop;
+    
+END print_employee_roster;
+/
+-- Question 5b
+execute print_employee_roster('sales');
+/
+-- Question 5c
+execute print_employee_roster('assembly');
+/
+-- Question 5d
+-- When a nonexistent job title is provided, the procedure does not output anything
+/
+-- Question 6a
+Create or replace procedure print_employee_roster
+(p_jobtitle IN employee.jobtitle%type)
+AS    
+    cursor all_employees
+    is
+        select employeeid, lastname||', '|| firstname as name 
+        from employee
+        where Upper(trim(jobtitle)) = Upper(trim(p_jobtitle));
+
+Begin
+    
+    for current_employee in all_employees loop
+    
+        DBMS_output.put(RPAD(current_employee.employeeid, 15, ' '));
+        DBMS_output.put_line(current_employee.name);
+    end loop;
+    
+EXCEPTION
+
+    When Others then
+        DBMS_OUTPUT.Put(SQLCODE);
+        DBMS_Output.put(': ');
+        DBMS_output.put(SUBSTR(SQLERRM,1,100));
+END print_employee_roster;
+/
+-- Question 6b
+execute print_employee_roster('assembly');
+/
+-- Question 6c
+-- A user would see a line in the DMBS_output with the sql error code associated with the exception and the error message associated with the sql error code.
+/
+-- Question 7a
+create or replace procedure customer_roster
+(p_state in varchar2)
+AS
+    cursor all_customers
+    is
+        select nvl(companyname, ' ') as companyname, city, state, custlastname ||', '|| custfirstname as ContactName from customer
+        where state = p_state;
+    
+    current_customer all_customers%rowtype;
+BEGIN
+    open all_customers;
+    fetch all_customers into current_customer;
+    
+    while all_customers%found loop
+            DBMS_output.put(RPAD(current_customer.companyname, 25, ' '));
+            DBMS_output.put(RPAD(current_customer.city, 35, ' '));
+            DBMS_output.put(RPAD(current_customer.state, 40, ' '));
+            DBMS_output.put_line((Current_customer.contactname));
+        fetch all_customers into current_customer;
+    end loop;
+    
+    close all_customers;
+    
+EXCEPTION
+
+    When Others then
+        DBMS_OUTPUT.Put(SQLCODE);
+        DBMS_Output.put(': ');
+        DBMS_output.put(SUBSTR(SQLERRM,1,100));
+end customer_roster;
+
+/
+-- Question 7b
+execute customer_roster('GA');
+/
+-- Question 8a
+create or replace procedure customer_search
+(p_name in varchar2)
+AS
+    cursor all_customers
+    is
+        select nvl(companyname, ' ') as companyname, city, state, custlastname ||', '|| custfirstname as ContactName from customer
+        where upper(custlastname) like '%'||upper(trim(p_name))||'%';
+    
+    current_customer all_customers%rowtype;
+BEGIN
+    open all_customers;
+    fetch all_customers into current_customer;
+    
+    while all_customers%found loop
+            DBMS_output.put(RPAD(current_customer.companyname, 25, ' '));
+            DBMS_output.put(RPAD(current_customer.city, 35, ' '));
+            DBMS_output.put(RPAD(current_customer.state, 35, ' '));
+            DBMS_output.put_line((Current_customer.contactname));
+        fetch all_customers into current_customer;
+    end loop;
+    
+    close all_customers;
+    
+EXCEPTION
+
+    When Others then
+        DBMS_OUTPUT.Put(SQLCODE);
+        DBMS_Output.put(': ');
+        DBMS_output.put(SUBSTR(SQLERRM,1,100));
+end customer_search;
+
+/
+-- Question 8b
+execute customer_search('JO');
+/
+-- Question 8c
+create or replace procedure customer_search
+(p_name in varchar2)
+AS
+    cursor all_customers
+    is
+        select nvl(companyname, ' ') as companyname, city, state, custlastname ||', '|| custfirstname as ContactName from customer
+        where upper(custlastname) like '%'||upper(trim(p_name))||'%' or upper(custfirstname) like '%'||upper(trim(p_name))||'%';
+    
+    current_customer all_customers%rowtype;
+BEGIN
+    open all_customers;
+    fetch all_customers into current_customer;
+    
+    while all_customers%found loop
+            DBMS_output.put(RPAD(current_customer.companyname, 25, ' '));
+            DBMS_output.put(RPAD(current_customer.city, 35, ' '));
+            DBMS_output.put(RPAD(current_customer.state, 35, ' '));
+            DBMS_output.put_line((Current_customer.contactname));
+        fetch all_customers into current_customer;
+    end loop;
+    
+    close all_customers;
+    
+EXCEPTION
+
+    When Others then
+        DBMS_OUTPUT.Put(SQLCODE);
+        DBMS_Output.put(': ');
+        DBMS_output.put(SUBSTR(SQLERRM,1,100));
+end customer_search;
+
+/
+-- Question 8d
+execute customer_search('JO');
+/
+create or replace procedure customer_search
+(p_name in varchar2)
+AS
+    cursor all_customers
+    is
+        select nvl(companyname, ' ') as companyname, city, state, custlastname ||', '|| custfirstname as ContactName from customer
+        where upper(custlastname) like '%'||upper(trim(p_name))||'%' or upper(custfirstname) like '%'||upper(trim(p_name))||'%';
+    
+BEGIN
+    
+    for current_customer in all_customers loop
+            DBMS_output.put(RPAD(current_customer.companyname, 25, ' '));
+            DBMS_output.put(RPAD(current_customer.city, 35, ' '));
+            DBMS_output.put(RPAD(current_customer.state, 35, ' '));
+            DBMS_output.put_line((Current_customer.contactname));
+    end loop;
+    
+EXCEPTION
+
+    When Others then
+        DBMS_OUTPUT.Put(SQLCODE);
+        DBMS_Output.put(': ');
+        DBMS_output.put(SUBSTR(SQLERRM,1,100));
+end customer_search;
+
+/
+-- Question 8f
+execute customer_search('JO');
+/
+
+/* results
+Question 1b
+100001         Manaugh                       Jim
+100101         Rosner                        Joanne
+100103         Bush                          Rita
+100104         Abbott                        Michael
+100106         Eckelman                      Paul
+100112         Hickman                       Steven
+100120         Nairn                         Michelle
+100125         Stevenson                     Gabrielle
+100127         Wendling                      Jason
+100200         Zobitz                        Beth
+100204         Keck                          David
+100206         Xolo                          Kathleen
+100209         Yates                         Tina
+100220         Vigus                         Todd
+100330         Gustavel                      Kristen
+100365         Cheswick                      Sherman
+100399         Day                           Ronald
+100475         Hess                          Steve
+100488         Osman                         Jamie
+100550         Roland                        Allison
+100559         Tyrie                         Meghan
+100600         Zollman                       Calie
+100650         Lilley                        Edna
+100700         Jones                         Charles
+100880         German                        Gary
+100892         Platt                         Joseph
+100944         Stahley                       Ryan
+100967         Albregts                      Nicholas
+100989         Deagen                        Kathryn
+101007         Krasner                       Jason
+101030         Moore                         Kristey
+101045         Ortman                        Austin
+101066         Rodgers                       Laura
+101088         Underwood                     Patricha
+101089         Alvarez                       Melissa
+101097         Brose                         Jack
+101115         Cochran                       Steve
+101135         Deppe                         David
+101154         Hettinger                     Gregory
+101166         Reece                         Phil
+
+Question 2b
+100001         Manaugh                       Jim
+100101         Rosner                        Joanne
+100103         Bush                          Rita
+100104         Abbott                        Michael
+100106         Eckelman                      Paul
+100112         Hickman                       Steven
+100120         Nairn                         Michelle
+100125         Stevenson                     Gabrielle
+100127         Wendling                      Jason
+100200         Zobitz                        Beth
+100204         Keck                          David
+100206         Xolo                          Kathleen
+100209         Yates                         Tina
+100220         Vigus                         Todd
+100330         Gustavel                      Kristen
+100365         Cheswick                      Sherman
+100399         Day                           Ronald
+100475         Hess                          Steve
+100488         Osman                         Jamie
+100550         Roland                        Allison
+100559         Tyrie                         Meghan
+100600         Zollman                       Calie
+100650         Lilley                        Edna
+100700         Jones                         Charles
+100880         German                        Gary
+100892         Platt                         Joseph
+100944         Stahley                       Ryan
+100967         Albregts                      Nicholas
+100989         Deagen                        Kathryn
+101007         Krasner                       Jason
+101030         Moore                         Kristey
+101045         Ortman                        Austin
+101066         Rodgers                       Laura
+101088         Underwood                     Patricha
+101089         Alvarez                       Melissa
+101097         Brose                         Jack
+101115         Cochran                       Steve
+101135         Deppe                         David
+101154         Hettinger                     Gregory
+101166         Reece                         Phil
+
+Question 3b
+100001         Manaugh, Jim
+100101         Rosner, Joanne
+100103         Bush, Rita
+100104         Abbott, Michael
+100106         Eckelman, Paul
+100112         Hickman, Steven
+100120         Nairn, Michelle
+100125         Stevenson, Gabrielle
+100127         Wendling, Jason
+100200         Zobitz, Beth
+100204         Keck, David
+100206         Xolo, Kathleen
+100209         Yates, Tina
+100220         Vigus, Todd
+100330         Gustavel, Kristen
+100365         Cheswick, Sherman
+100399         Day, Ronald
+100475         Hess, Steve
+100488         Osman, Jamie
+100550         Roland, Allison
+100559         Tyrie, Meghan
+100600         Zollman, Calie
+100650         Lilley, Edna
+100700         Jones, Charles
+100880         German, Gary
+100892         Platt, Joseph
+100944         Stahley, Ryan
+100967         Albregts, Nicholas
+100989         Deagen, Kathryn
+101007         Krasner, Jason
+101030         Moore, Kristey
+101045         Ortman, Austin
+101066         Rodgers, Laura
+101088         Underwood, Patricha
+101089         Alvarez, Melissa
+101097         Brose, Jack
+101115         Cochran, Steve
+101135         Deppe, David
+101154         Hettinger, Gregory
+101166         Reece, Phil
+
+Question 4b
+100001         Manaugh, Jim
+100101         Rosner, Joanne
+100103         Bush, Rita
+100104         Abbott, Michael
+100106         Eckelman, Paul
+100112         Hickman, Steven
+100120         Nairn, Michelle
+100125         Stevenson, Gabrielle
+100127         Wendling, Jason
+100200         Zobitz, Beth
+100204         Keck, David
+100206         Xolo, Kathleen
+100209         Yates, Tina
+100220         Vigus, Todd
+100330         Gustavel, Kristen
+100365         Cheswick, Sherman
+100399         Day, Ronald
+100475         Hess, Steve
+100488         Osman, Jamie
+100550         Roland, Allison
+100559         Tyrie, Meghan
+100600         Zollman, Calie
+100650         Lilley, Edna
+100700         Jones, Charles
+100880         German, Gary
+100892         Platt, Joseph
+100944         Stahley, Ryan
+100967         Albregts, Nicholas
+100989         Deagen, Kathryn
+101007         Krasner, Jason
+101030         Moore, Kristey
+101045         Ortman, Austin
+101066         Rodgers, Laura
+101088         Underwood, Patricha
+101089         Alvarez, Melissa
+101097         Brose, Jack
+101115         Cochran, Steve
+101135         Deppe, David
+101154         Hettinger, Gregory
+101166         Reece, Phil
+
+Question 5b
+100600         Zollman, Calie
+101007         Krasner, Jason
+101066         Rodgers, Laura
+
+Question 5c
+100101         Rosner, Joanne
+100120         Nairn, Michelle
+100204         Keck, David
+100399         Day, Ronald
+100475         Hess, Steve
+100550         Roland, Allison
+100892         Platt, Joseph
+100967         Albregts, Nicholas
+100989         Deagen, Kathryn
+101030         Moore, Kristey
+101045         Ortman, Austin
+101088         Underwood, Patricha
+101089         Alvarez, Melissa
+101097         Brose, Jack
+101115         Cochran, Steve
+101135         Deppe, David
+101154         Hettinger, Gregory
+101166         Reece, Phil
+
+Question 6b
+100101         Rosner, Joanne
+100120         Nairn, Michelle
+100204         Keck, David
+100399         Day, Ronald
+100475         Hess, Steve
+100550         Roland, Allison
+100892         Platt, Joseph
+100967         Albregts, Nicholas
+100989         Deagen, Kathryn
+101030         Moore, Kristey
+101045         Ortman, Austin
+101088         Underwood, Patricha
+101089         Alvarez, Melissa
+101097         Brose, Jack
+101115         Cochran, Steve
+101135         Deppe, David
+101154         Hettinger, Gregory
+101166         Reece, Phil
+
+Question 7b
+Family Medical Center    Adel                               GA                                      Strong, Susan
+Down Deep Drilling Inc.  Elberton                           GA                                      Torres, Don
+                         Macon                              GA                                      Vanderhoff, Rosemary
+                         Nahunta                            GA                                      Malady, Frank
+                         Swainsboro                         GA                                      Osborne, Shirley
+                         Athens                             GA                                      Thompson, Jamie
+
+Question 8b
+Railroad Express         Eastport                           ID                                 Jones, Dusty
+Computer Consultants     Allentown                          PA                                 Jones, Mildred
+Supplying Crafts         Jacksonville                       FL                                 Jordan, Kelly
+                         Spokane                            WA                                 Jordan, Jeffery
+                         Burns                              OR                                 Jones, James
+                         Aurora                             CO                                 Jones, Brenda
+                         Grand                              FL                                 Jones, Charles
+
+Question 8d
+Railroad Express         Eastport                           ID                                 Jones, Dusty
+Computer Consultants     Allentown                          PA                                 Jones, Mildred
+National Art Museum      Beatrice                           NE                                 Vandermay, Marjorie
+Supplying Crafts         Jacksonville                       FL                                 Jordan, Kelly
+                         Spokane                            WA                                 Jordan, Jeffery
+                         Springdale                         AR                                 Hedden, Joan
+                         Burns                              OR                                 Jones, James
+                         Tucson                             AZ                                 Clute, Jon
+                         Aurora                             CO                                 Jones, Brenda
+                         Preston                            ID                                 McGinnis, John
+                         Vineland                           NJ                                 Jacko, Jo
+                         Grand                              FL                                 Jones, Charles
+                         Portland                           ME                                 Garcia, John
+                         Akron                              OH                                 Schuman, Joseph
+                         Jackson                            TN                                 Cole, Joshua
+                         Oshkosh                            WI                                 Blanco, Jonathon
+                         Findlay                            OH                                 Skadberg, John
+                         Wallowa                            OR                                 Wales, Mary Jo
+
+Question 8f
+Railroad Express         Eastport                           ID                                 Jones, Dusty
+Computer Consultants     Allentown                          PA                                 Jones, Mildred
+National Art Museum      Beatrice                           NE                                 Vandermay, Marjorie
+Supplying Crafts         Jacksonville                       FL                                 Jordan, Kelly
+                         Spokane                            WA                                 Jordan, Jeffery
+                         Springdale                         AR                                 Hedden, Joan
+                         Burns                              OR                                 Jones, James
+                         Tucson                             AZ                                 Clute, Jon
+                         Aurora                             CO                                 Jones, Brenda
+                         Preston                            ID                                 McGinnis, John
+                         Vineland                           NJ                                 Jacko, Jo
+                         Grand                              FL                                 Jones, Charles
+                         Portland                           ME                                 Garcia, John
+                         Akron                              OH                                 Schuman, Joseph
+                         Jackson                            TN                                 Cole, Joshua
+                         Oshkosh                            WI                                 Blanco, Jonathon
+                         Findlay                            OH                                 Skadberg, John
+                         Wallowa                            OR                                 Wales, Mary Jo

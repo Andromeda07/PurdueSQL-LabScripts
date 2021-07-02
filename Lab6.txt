@@ -1,0 +1,727 @@
+-- Question 1a
+begin
+DBMS_OUTPUT.PUT_LINE('Hello World');
+end;
+/
+-- Question 1b
+set serveroutput on;
+/
+-- Question 1c
+begin
+DBMS_OUTPUT.PUT_LINE('Hello World');
+end;
+/
+-- Question 1d
+-- The SERVEROUTPUT setting determines if code will print the output generated in the Dbms Output (https://www.oreilly.com/library/view/oracle-sqlplus-the/0596007469/re85.html)
+/
+-- Question 1e
+begin
+DBMS_OUTPUT.PUT_LINE('Hello World');
+end;
+-- SQL Developer does not remember the preference
+/
+-- Question 2a
+begin
+dbms_output.put_line('The ubiquitous Hello World');
+end;
+/
+-- Question 2b
+begin
+dbms_output.put('The');
+dbms_output.put(' ');
+dbms_output.put('Ubiquitous');
+dbms_output.put(' ');
+dbms_output.put('Hello');
+dbms_output.put(' ');
+dbms_output.put_line('World');
+end;
+/
+-- Question 2c
+-- Output.put does not add a linebreak to the end of the string while output.put_line does
+/
+-- Question 2d
+-- Output.put writes a partial line (https://www.tutorialspoint.com/plsql/plsql_dbms_output.htm)
+/
+-- Question 2e
+-- Output.put_line writes a full and completed line (https://www.tutorialspoint.com/plsql/plsql_dbms_output.htm)
+/
+-- Question 2f
+-- Based on the definitions, Output.put will put part of a line that can be continued while output.put_line puts an entire line that cannot be added to
+/
+-- Question 3
+begin
+DBMS_output.put_line('My name is '||'&sv_YourName');
+end;
+-- SQL Developer opens a dialogue prompt asking for a value for "sv_YourName"
+/
+-- Question 4a
+set verify on;
+/
+-- Question 4b
+begin
+DBMS_output.put_line('My name is '||'&sv_YourName');
+end;
+/
+-- Question 4c
+set verify off;
+/
+-- Question 4d
+-- The Verify setting determines if the output will include a before/after for a substitutional variable (https://www.oreilly.com/library/view/oracle-sqlplus-the/0596007469/re106.html)
+/
+-- Question 5
+begin
+DBMS_output.put_line('My name is '||'&sv_YourName');
+end;
+/
+begin
+DBMS_output.put_line('My name is '||'&sv_YourName');
+end;
+-- It asks for the value twice. There is no persistence in the inputted values
+/
+-- Question 6
+begin
+DBMS_output.put_line('Today is '||'&sv_Day');
+DBMS_output.put_line('Tomorrow is '||'&sv_Day');
+end;
+-- You can use the same variable name twice, it prompts for a new value each time it is used
+/
+-- Question 7a
+begin
+DBMS_output.put_line('Today is '||'&&sv_Day');
+DBMS_output.put_line('Tomorrow is '||'&sv_Day');
+end;
+-- I was only prompted once. Using && appears to enable persistence
+/
+-- Question 7b
+begin
+DBMS_output.put_line('Today is '||'&&sv_Day');
+DBMS_output.put_line('Tomorrow is '||'&sv_Day');
+end;
+-- With the && I was not prompted again, showing that && causes the value to persist past the execution of a single command
+/
+-- Question 8
+declare
+v_day varchar2(10) := '&sv_day1';
+begin
+dbms_output.put_line('Today is '|| V_DAY);
+end;
+/
+-- Question 9
+declare
+v_day varchar2(10);
+
+begin
+v_day := to_char(sysdate, 'Day');
+DBMS_Output.put_line('Today is '||V_Day);
+DBMS_output.put_line('Tomorrow is '||to_char(sysdate+1, 'Day'));
+end;
+/
+-- Question 10a
+select employeeID
+from employee
+where employeeID = '100001';
+-- Only 1 row is returned
+/
+-- Question 10b
+declare
+V_EMPLOYEEID EMPLOYEE.EMPLOYEEID%TYPE;
+V_LASTNAME EMPLOYEE.LASTNAME%TYPE;
+V_FIRSTNAME EMPLOYEE.FIRSTNAME%TYPE;
+
+begin
+select EmployeeID, LASTNAME, FIRSTNAME
+into V_EMPLOYEEID, V_LASTNAME, V_FIRSTNAME
+from employee where employeeID = '100001';
+DBMS_OUTPUT.PUT_LINE('EMPLOYEE ID      LASTNAME        FIRSTNAME');
+DBMS_OUTPUT.PUT_LINE('==========================================');
+DBMS_OUTPUT.Put(V_EMPLOYEEID);
+DBMS_OUTPUT.Put('       ');
+DBMS_OUTPUT.Put(V_LASTNAME);
+DBMS_OUTPUT.Put('       ');
+DBMS_OUTPUT.Put(V_FIRSTNAME);
+
+end;
+/
+-- Question 10c
+select EmployeeID
+from Employee;
+-- 40 rows are returned
+/
+-- Question 10d
+declare
+V_EMPLOYEEID EMPLOYEE.EMPLOYEEID%TYPE;
+V_LASTNAME EMPLOYEE.LASTNAME%TYPE;
+V_FIRSTNAME EMPLOYEE.FIRSTNAME%TYPE;
+
+begin
+select EmployeeID, LASTNAME, FIRSTNAME
+into V_EMPLOYEEID, V_LASTNAME, V_FIRSTNAME
+from employee;
+
+DBMS_OUTPUT.PUT_LINE('EMPLOYEE ID      LASTNAME        FIRSTNAME');
+DBMS_OUTPUT.PUT_LINE('==========================================');
+DBMS_OUTPUT.Put(V_EMPLOYEEID);
+DBMS_OUTPUT.Put('       ');
+DBMS_OUTPUT.Put(V_LASTNAME);
+DBMS_OUTPUT.Put('       ');
+DBMS_OUTPUT.Put(V_FIRSTNAME);
+
+end;
+/
+-- Question 10e
+-- You attempt to assign 40 values to each variable. This does not work, as shown by the error
+/
+-- Question 10f
+-- I would assume 1 value can be held in a scalar variable. It is for sure at least 1 and less than 40
+/
+-- Question 11a
+select jobtitle, count(employeeID)
+from employee
+group by jobtitle;
+-- 14 rows are returned
+/
+-- Question 11b
+declare
+v_number_employees number;
+v_jobtitle varchar2(50) := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+if v_number_employees <1 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+elsif v_number_employees <4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+elsif v_number_employees <7 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+    end if;
+
+end;
+/
+-- Question 11c
+declare
+v_number_employees number;
+v_jobtitle varchar2(50) := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+if v_number_employees <1 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+elsif v_number_employees <4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+elsif v_number_employees <7 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+    end if;
+
+end;
+/
+-- Question 11d
+declare
+v_number_employees number;
+v_jobtitle varchar2(50) := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+if v_number_employees <1 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+elsif v_number_employees <4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+elsif v_number_employees <7 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+    end if;
+
+end;
+/
+-- Question 11e
+declare
+v_number_employees number;
+v_jobtitle varchar2(50) := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+if v_number_employees <1 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+elsif v_number_employees <4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+elsif v_number_employees <7 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+    end if;
+
+end;
+/
+-- Question 12a
+declare
+v_number_employees number;
+v_jobtitle varchar2(50) := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+case v_number_employees
+when 0 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+when 1 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 2 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 3 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 5 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 6 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+end case;
+
+end;
+/
+-- Question 12b
+declare
+v_number_employees number;
+v_jobtitle varchar2(50) := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+case v_number_employees
+when 0 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+when 1 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 2 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 3 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 5 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 6 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+end case;
+
+end;
+/
+-- Question 12c
+declare
+v_number_employees number;
+v_jobtitle varchar2(50) := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+case v_number_employees
+when 0 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+when 1 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 2 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 3 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 5 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 6 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+end case;
+
+end;
+/
+-- Question 12d
+declare
+v_number_employees number;
+v_jobtitle varchar2(50) := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+case v_number_employees
+when 0 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+when 1 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 2 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 3 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 5 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 6 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+end case;
+
+end;
+/
+-- Question 13a
+declare
+v_number_employees number;
+v_jobtitle Employee.Jobtitle%type := '&v_jobtitle';
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+case v_number_employees
+when 0 then
+    DBMS_OUTPUT.PUT_LINE ('There are no employees with the job title: '||V_JOBTITLE);
+when 1 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 2 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 3 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 1 and 3 employees with the job title: '||V_JOBTITLE);
+when 4 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 5 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+when 6 then
+    DBMS_OUTPUT.PUT_LINE ('There are between 4 and 6 employees with the job title: '||V_JOBTITLE);
+else
+    DBMS_OUTPUT.PUT_LINE ('There are greater than 7 employees with the job title: '||V_JOBTITLE);
+end case;
+
+end;
+/
+-- Question 13b
+-- Using a column type means the table can be changed to use a different data type and the variable will change with it
+/
+-- Question 14
+declare
+v_number_employees number;
+v_jobtitle Employee.Jobtitle%type := '&v_jobtitle';
+v_staff_level varchar2(100);
+
+begin
+select count (employeeID)
+into v_number_employees
+from employee
+where jobtitle = v_jobtitle;
+
+case v_number_employees
+when 0 then
+    v_staff_level := 'There are no employees with the job title: ';
+when 1 then
+    v_staff_level := 'There are between 1 and 3 employees with the job title: ';
+when 2 then
+    v_staff_level := 'There are between 1 and 3 employees with the job title: ';
+when 3 then
+    v_staff_level := 'There are between 1 and 3 employees with the job title: ';
+when 4 then
+    v_staff_level := 'There are between 4 and 6 employees with the job title: ';
+when 5 then
+    v_staff_level := 'There are between 4 and 6 employees with the job title: ';
+when 6 then
+    v_staff_level := 'There are between 4 and 6 employees with the job title: ';
+else
+    v_staff_level := 'There are greater than 7 employees with the job title: ';
+end case;
+
+--Output user-friendly response
+DBMS_output.put_line(v_staff_level||V_jobtitle);
+
+end;
+/
+
+/*Results
+
+Question 1a
+PL/SQL procedure successfully completed.
+
+Question 1c
+Hello World
+
+
+PL/SQL procedure successfully completed.
+
+Question 1e
+PL/SQL procedure successfully completed.
+
+Question 2a
+The ubiquitous Hello World
+
+
+PL/SQL procedure successfully completed.
+
+Question 2b
+The Ubiquitous Hello World
+
+
+PL/SQL procedure successfully completed.
+
+Question 3
+My name is Andrew
+
+
+PL/SQL procedure successfully completed.
+
+Question 4b
+old:begin
+DBMS_output.put_line('My name is '||'&sv_YourName');
+end;
+new:begin
+DBMS_output.put_line('My name is '||'Andromeda');
+end;
+My name is Andromeda
+
+
+PL/SQL procedure successfully completed.
+
+Question 4d
+My name is Andromeda
+
+
+PL/SQL procedure successfully completed.
+
+Question 5
+old:begin
+DBMS_output.put_line('My name is '||'&sv_YourName');
+end;
+new:begin
+DBMS_output.put_line('My name is '||'Andrew');
+end;
+My name is Andrew
+
+
+PL/SQL procedure successfully completed.
+
+Question 6
+Today is Wednesday
+Tomorrow is Thursday
+
+
+PL/SQL procedure successfully completed.
+
+Question 7a
+Today is Wednesday
+Tomorrow is Wednesday
+
+
+PL/SQL procedure successfully completed.
+
+Question 7b
+Today is Wednesday
+Tomorrow is Wednesday
+
+
+PL/SQL procedure successfully completed.
+
+Question 8
+Today is Wednesday
+
+
+PL/SQL procedure successfully completed.
+
+Question 9
+Today is Tuesday  
+Tomorrow is Wednesday
+
+
+PL/SQL procedure successfully completed
+
+Question 10a
+EMPLOYEEID
+----------
+100001
+
+Question 10b
+EMPLOYEE ID      LASTNAME        FIRSTNAME
+==========================================
+
+
+PL/SQL procedure successfully completed.
+
+Question 10c
+EMPLOYEEID
+----------
+100001
+100101
+100103
+100104
+100106
+100112
+100120
+100125
+100127
+100200
+100204
+
+EMPLOYEEID
+----------
+100206
+100209
+100220
+100330
+100365
+100399
+100475
+100488
+100550
+100559
+100600
+
+EMPLOYEEID
+----------
+100650
+100700
+100880
+100892
+100944
+100967
+100989
+101007
+101030
+101045
+101066
+
+EMPLOYEEID
+----------
+101088
+101089
+101097
+101115
+101135
+101154
+101166
+
+40 rows selected. 
+
+Question 10d
+Error report -
+ORA-01422: exact fetch returns more than requested number of rows
+ORA-06512: at line 7
+01422. 00000 -  "exact fetch returns more than requested number of rows"
+*Cause:    The number specified in exact fetch is less than the rows returned.
+*Action:   Rewrite the query or change number of rows requested
+
+Question 11a
+JOBTITLE                            COUNT(EMPLOYEEID)
+----------------------------------- -----------------
+Chief Sales Officer                                 1
+Engineer                                            5
+President                                           1
+DBA                                                 1
+Chief Financial Officer                             1
+Assembly                                           18
+VP Operations                                       1
+Programmer Analyst                                  2
+Accountant                                          2
+Sales                                               3
+Chief Information Officer                           1
+
+JOBTITLE                            COUNT(EMPLOYEEID)
+----------------------------------- -----------------
+Operations Officer                                  2
+VP Finance                                          1
+VP Information                                      1
+
+14 rows selected. 
+
+Question 11b
+There are no employees with the job title: CIO
+
+
+PL/SQL procedure successfully completed.
+
+Question 11c
+There are between 1 and 3 employees with the job title: Accountant
+
+
+PL/SQL procedure successfully completed.
+
+Question 11d
+There are between 4 and 6 employees with the job title: Engineer
+
+
+PL/SQL procedure successfully completed.
+
+Question 11e
+There are greater than 7 employees with the job title: Assembly
+
+
+PL/SQL procedure successfully completed.
+
+Question 12a
+There are no employees with the job title: CIO
+
+
+PL/SQL procedure successfully completed.
+
+Question 12b
+There are between 1 and 3 employees with the job title: Accountant
+
+
+PL/SQL procedure successfully completed.
+
+Question 12c
+There are between 4 and 6 employees with the job title: Engineer
+
+
+PL/SQL procedure successfully completed.
+
+Question 12d
+There are greater than 7 employees with the job title: Assembly
+
+
+PL/SQL procedure successfully completed.
+
+Question 13a
+There are no employees with the job title: CIO
+
+
+PL/SQL procedure successfully completed.
+
+Question 14
+There are between 4 and 6 employees with the job title: Engineer
+
+
+PL/SQL procedure successfully completed.

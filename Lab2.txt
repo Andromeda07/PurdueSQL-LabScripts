@@ -1,0 +1,765 @@
+-- Question 1
+select i.partnumber, i.partdescription, round(avg(o.orderquantity),1)
+from custorderline o inner join inventorypart i on o.partnumber=i.partnumber
+where i.categoryid='SOFT'
+group by i.partnumber, i.partdescription
+order by avg(o.orderquantity) desc;
+/
+-- Question 2
+-- The caveat of "on any order placed for that part" is imporant because otherwise you would average the quantity of items sold in all orders together, or on the entire order. It makes the question much more clear.
+-- Question 3
+select p.partnumber, to_char(o.orderdate, 'YYYY'), round(avg(l.orderquantity),1)
+from inventorypart p inner join custorderline l on p.partnumber = l.partnumber inner join custorder o on l.orderid = o.orderid
+where p.partnumber = 'DVD-001'
+group by to_char(o.orderdate, 'YYYY'), p.partnumber;
+/
+-- Question 4
+-- The average quantity sold per order doubled between 2010 and 2011
+-- Quetion 5
+select p.partnumber, to_char(o.orderdate, 'YYYY'), sum(l.orderquantity)
+from inventorypart p inner join custorderline l on p.partnumber = l.partnumber inner join custorder o on l.orderid = o.orderid
+where p.partnumber = 'DVD-001'
+group by to_char(o.orderdate, 'YYYY'), p.partnumber;
+/
+-- Question 6
+-- There were 5 fewer items sold in 2011 compared to 2010
+-- Question 7
+select p.partnumber, to_char(o.orderdate, 'YYYY'), count(l.orderid)
+from inventorypart p inner join custorderline l on p.partnumber = l.partnumber inner join custorder o on l.orderid = o.orderid
+where p.partnumber = 'DVD-001'
+group by to_char(o.orderdate, 'YYYY'), p.partnumber;
+/
+-- Question 8
+-- there were significantly fewer orders in 2011 compared to 2010
+-- Question 9
+-- Each question is attempting to determine the trend in sales of the part 'DVD-001'
+-- Question 10
+-- The sales of DVD-001 are dropping, but more are being ordered in each order. Overall fewer are sold
+-- Question 11
+-- The answers seem to conflict with eachother, but actually support eachother when interpreted together. The sharp increase in average items per order with the decrease in orders match the small decrease in items sold. Any two answers support the third.
+-- Question 12
+select s.orderid, p.shipmentid, p.packagenumber, to_char(p.shippeddate, 'MM/DD/YYYY'), s.shipname, s.shipaddress
+from packingslip p inner join shipment s on p.shipmentid = s.shipmentid
+where s.orderid = '2000000001';
+/
+-- Question 13
+-- There is one order shipped in three seperate packages, the information for each of which is displayed.
+-- Question 14
+select c.custlastname||', '||c.custfirstname,c.customerid,o.orderid
+from customer c left outer join custorder o on c.customerid = o.customerid
+where c.companyname is null and c.state = 'PA';
+/
+-- Question 15
+select c.custlastname||', '||c.custfirstname,c.customerid,o.orderid
+from customer c right outer join custorder o on c.customerid = o.customerid
+where c.companyname is null and c.state = 'PA';
+/
+-- Question 16
+select p.partnumber, c.categoryname
+from inventorypart p full outer join category c on p.categoryid = c.categoryid;
+/
+-- Question 17
+select c.custfirstname||' '||c.custlastname as CustomerName, c.customerid, o.orderid, s.shipmentid, p.packagenumber, s.shipname, p.shippeddate
+from customer c full outer join custorder o on c.customerid = o.customerid
+full outer join shipment s on s.orderid=o.orderid
+full outer join packingslip p on s.shipmentid = p.shipmentid
+where o.orderid='2001000791';
+/
+-- Question 18
+select distinct customerid
+from customer
+where state = 'PA'
+intersect
+select distinct customerid
+from custorder;
+/
+-- Question 19
+select distinct customerid
+from customer
+where state = 'PA'
+minus
+select distinct customerid
+from custorder
+/
+-- Question 20
+select distinct customerid
+from customer
+where state = 'PA'
+intersect
+select distinct customerid
+from custorder
+where orderdate between to_date('2011/01/01', 'yyyy/mm/dd') and to_date('2011/12/31', 'yyyy/mm/dd');
+/
+-- Question 21
+select distinct customerid
+from customer
+where state = 'PA'
+minus
+select distinct customerid
+from custorder
+where orderdate between to_date('2011/01/01', 'yyyy/mm/dd') and to_date('2011/12/31', 'yyyy/mm/dd');
+/
+-- Question 22
+select partnumber
+from inventorypart
+where categoryid = 'CAB'
+intersect
+select partnumber
+from custorderline;
+/
+-- Question 23
+select partnumber
+from inventorypart
+where categoryid = 'CAB'
+minus
+select partnumber
+from custorderline;
+/
+-- Question 24
+select partnumber
+from inventorypart
+where categoryid = 'CAB'
+intersect
+select l.partnumber
+from custorderline l inner join custorder o on l.orderid=o.orderid
+where o.orderdate between to_date('2010/01/01', 'yyyy/mm/dd') and to_date('2010/12/31', 'yyyy/mm/dd');
+/
+-- Question 25
+select partnumber
+from inventorypart
+where categoryid = 'CAB'
+minus
+select l.partnumber
+from custorderline l inner join custorder o on l.orderid=o.orderid
+where o.orderdate between to_date('2010/01/01', 'yyyy/mm/dd') and to_date('2010/12/31', 'yyyy/mm/dd');
+/
+-- Question 26
+select distinct firstname, lastname
+from (
+select custfirstname as firstname, custlastname as lastname
+from customer
+where state = 'FL'
+union
+select firstname, lastname
+from employee
+)
+order by firstname asc, lastname asc;
+/
+-- Question 27
+select distinct firstname, lastname
+from (
+select custfirstname as firstname, custlastname as lastname
+from customer
+where state = 'FL'
+union all
+select firstname, lastname
+from employee
+)
+order by firstname asc, lastname asc;
+-- Question 28
+select * from (
+select c.custlastname||', '|| c.custfirstname as name, c.customerid, o.orderid
+from customer c left outer join custorder o on c.customerid=o.orderid
+where c.companyname is null and state = 'PA'
+union
+select c.companyname as name, c.customerid, o.orderid
+from customer c left outer join custorder o on c.customerid=o.orderid
+where c.companyname is not null and state = 'PA')
+order by customerid, orderid;
+
+/*results
+
+Question 1
+PARTNUMBER PARTDESCRIPTION                                    ROUND(AVG(O.ORDERQUANTITY),1)
+---------- -------------------------------------------------- -----------------------------
+SFT-003    1000 BEST GAMES                                                              7.3
+SFT-004    HOME AND GARDEN                                                              5.4
+SFT-006    CARD GAMES                                                                   4.8
+SFT-007    SCREEN SAVER                                                                 4.6
+SFT-008    CLIPART AND FONTS DELUXE                                                     4.5
+SFT-005    BOARD GAMES                                                                  4.4
+SFT-001    STREET MAPS USA                                                              3.9
+SFT-002    TRAVEL MAPS USA                                                              2.9
+
+Question 3
+PARTNUM TO_C ROUND(AVG(L.ORDERQUANTITY),1)
+------- ---- -----------------------------
+DVD-001 2010                           2.1
+DVD-001 2011                           4.5
+
+Question 5
+PARTNUM TO_C SUM(L.ORDERQUANTITY)
+------- ---- --------------------
+DVD-001 2010                   23
+DVD-001 2011                   18
+
+Question 7
+PARTNUM TO_C COUNT(L.ORDERID)
+------- ---- ----------------
+DVD-001 2010               11
+DVD-001 2011                4
+
+Question 12
+ORDERID    SHIPMENTID PACKAGENUMBER TO_CHAR(P. SHIPNAME             SHIPADDRESS                             
+---------- ---------- ------------- ---------- -------------------- ----------------------------------------
+2000000001 M001                   1 07/08/2010 Anna Mayton          2381 Basse Rd.                          
+2000000001 M001                   2 07/08/2010 Anna Mayton          2381 Basse Rd.                          
+2000000001 M001                   3 07/08/2010 Anna Mayton          2381 Basse Rd. 
+
+Question 14
+C.CUSTLASTNAME||','||C.CUSTFIRSTNAME  CUSTOMERID ORDERID   
+------------------------------------- ---------- ----------
+Wolfe, Thomas                         I-300149   2001000670
+Wolfe, Thomas                         I-300149   2001000736
+Wolfe, Thomas                         I-300149   2001000751
+Wolfe, Thomas                         I-300149   2001000768
+Wolfe, Thomas                         I-300149   2000000497
+Kaleta, Don                           I-300028     
+
+Question 15
+C.CUSTLASTNAME||','||C.CUSTFIRSTNAME  CUSTOMERID ORDERID   
+------------------------------------- ---------- ----------
+Wolfe, Thomas                         I-300149   2001000670
+Wolfe, Thomas                         I-300149   2001000736
+Wolfe, Thomas                         I-300149   2001000751
+Wolfe, Thomas                         I-300149   2001000768
+Wolfe, Thomas                         I-300149   2000000497
+
+Question 16
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+ADT-001    Storage                       
+ADT-002    Cables                        
+ADT-003    Cables                        
+ADT-004    Cables                        
+ADT-005    Cables                        
+ADT-006    Cables                        
+ADT-007    Cables                        
+BB-001     Basics                        
+BB-002     Basics                        
+BB-003     Basics                        
+BB-004     Basics                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+BB-005     Basics                        
+BRK-001    Cables                        
+BRK-002    Cables                        
+BRK-003    Cables                        
+BRK-004    Cables                        
+BRK-005    Cables                        
+BRK-006    Cables                        
+BRK-007    Cables                        
+BRK-008    Cables                        
+BRK-009    Cables                        
+BRK-010    Cables                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+BRK-011    Cables                        
+C-001      Basics                        
+C-002      Basics                        
+C-003      Basics                        
+CAB-001    Cables                        
+CAB-002    Cables                        
+CAB-003    Cables                        
+CAB-004    Cables                        
+CAB-005    Cables                        
+CAB-006    Cables                        
+CAB-007    Cables                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+CAB-008    Cables                        
+CAB-009                                  
+CAB-010                                  
+CAB-011                                  
+CAB-012                                  
+CAB-013                                  
+CAB-014                                  
+CAB-015                                  
+CAB-016                                  
+CAB-017                                  
+CAB-018                                  
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+CAB-019                                  
+CAB-020                                  
+CAB-021                                  
+CAB-022                                  
+CAB-023                                  
+CAB-024                                  
+CAB-025                                  
+CAB-026                                  
+CAB-027                                  
+CAB-028                                  
+CD-001     Storage                       
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+CD-002     Storage                       
+CD-003     Storage                       
+CD-004     Storage                       
+CF-001     Processors                    
+CF-002     Processors                    
+CF-003     Processors                    
+CF-004     Processors                    
+CF-005     Processors                    
+CF-006     Processors                    
+CF-007     Processors                    
+CF-008     Processors                    
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+CF-009     Processors                    
+CRD-001                                  
+CRD-002                                  
+CRD-003                                  
+CRD-004                                  
+CRD-005                                  
+CRD-006                                  
+CRD-007                                  
+CRD-008                                  
+CRD-009                                  
+CTR-001    Computers                     
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+CTR-002    Computers                     
+CTR-003    Computers                     
+CTR-004    Computers                     
+CTR-005    Computers                     
+CTR-006    Computers                     
+CTR-007    Computers                     
+CTR-008    Computers                     
+CTR-009    Computers                     
+CTR-010    Computers                     
+CTR-011    Computers                     
+CTR-012    Computers                     
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+CTR-013    Computers                     
+CTR-014    Computers                     
+CTR-015    Computers                     
+CTR-016    Computers                     
+CTR-017    Computers                     
+CTR-018    Computers                     
+CTR-019    Computers                     
+CTR-020    Computers                     
+CTR-021    Computers                     
+CTR-022    Computers                     
+CTR-023    Computers                     
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+CTR-024    Computers                     
+CTR-025    Computers                     
+CTR-026    Computers                     
+CTR-027    Computers                     
+CTR-028    Computers                     
+CTR-029    Computers                     
+DVD-001    Storage                       
+DVD-002    Storage                       
+ICAB-001   Cables                        
+ICAB-002   Cables                        
+ICAB-003   Cables                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+ICAB-004   Cables                        
+ICAB-005   Cables                        
+ICAB-006   Cables                        
+ICAB-007   Cables                        
+ICAB-008   Cables                        
+KEY-001    Basics                        
+KEY-002    Basics                        
+KEY-003    Basics                        
+KEY-004    Basics                        
+KEY-005    Basics                        
+KEY-006    Basics                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+KEY-007    Basics                        
+KEY-008    Basics                        
+KEY-009    Basics                        
+MEM-001    Storage                       
+MEM-002    Storage                       
+MEM-003    Storage                       
+MEM-004    Storage                       
+MEM-005    Storage                       
+MEM-006    Storage                       
+MEM-007    Storage                       
+MEM-008    Storage                       
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+MEM-009    Storage                       
+MEM-010    Storage                       
+MEM-011    Storage                       
+MEM-012    Storage                       
+MIC-001    Basics                        
+MIC-002    Basics                        
+MIC-003    Basics                        
+MIC-004    Basics                        
+MIC-005    Basics                        
+MIC-006    Basics                        
+MIC-007    Basics                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+MIC-008    Basics                        
+MIC-009    Basics                        
+MIC-010    Basics                        
+MIC-011    Basics                        
+MIC-012    Basics                        
+MOD-001    Accessories                   
+MOD-002    Accessories                   
+MOD-003    Accessories                   
+MOD-004    Accessories                   
+MOD-005    Accessories                   
+MOM-001    Basics                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+MOM-002    Basics                        
+MOM-003    Basics                        
+MOM-004    Basics                        
+MON-001    Basics                        
+MON-002    Basics                        
+MON-003    Basics                        
+MON-004    Basics                        
+MON-005    Basics                        
+MON-006    Basics                        
+MON-007    Basics                        
+MON-008    Basics                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+P-001      Processors                    
+P-002      Processors                    
+P-003      Processors                    
+P-004      Processors                    
+P-005      Processors                    
+P-006      Processors                    
+P-007      Processors                    
+P-008      Processors                    
+P-009      Processors                    
+P-010      Processors                    
+POW-001    Cables                        
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+POW-002    Cables                        
+POW-003    Cables                        
+PRT-001    Accessories                   
+PRT-002    Accessories                   
+PRT-003    Accessories                   
+PRT-004    Accessories                   
+PRT-005    Accessories                   
+PRT-006    Accessories                   
+PS-001     Power                         
+PS-002     Power                         
+PS-003     Power                         
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+PS-004     Power                         
+SCN-001    Accessories                   
+SCN-002    Accessories                   
+SCN-003    Accessories                   
+SFT-001    Software                      
+SFT-002    Software                      
+SFT-003    Software                      
+SFT-004    Software                      
+SFT-005    Software                      
+SFT-006    Software                      
+SFT-007    Software                      
+
+PARTNUMBER CATEGORYNAME                  
+---------- ------------------------------
+SFT-008    Software                      
+SFT-009    Software                      
+SP-001     Basics                        
+SP-002     Basics                        
+SP-003     Basics                        
+           Tablets    
+Question 17
+CUSTOMERNAME                         CUSTOMERID ORDERID    SHIPMENTID PACKAGENUMBER SHIPNAME             SHIPPEDDA
+------------------------------------ ---------- ---------- ---------- ------------- -------------------- ---------
+Steven Yaun                          I-300147   2001000791 L258                     Michelle Oakley               
+
+Question 18
+CUSTOMERID
+----------
+C-300006
+C-300040
+C-300062
+I-300149
+
+Question 19
+CUSTOMERID
+----------
+I-300028
+
+Question 20
+CUSTOMERID
+----------
+C-300006
+C-300040
+I-300149
+
+
+Question 21
+CUSTOMERID
+----------
+C-300062
+I-300028
+
+Question 22
+PARTNUMBER
+----------
+ADT-003
+ADT-004
+ADT-005
+ADT-006
+ADT-007
+BRK-001
+BRK-002
+BRK-003
+BRK-004
+BRK-005
+BRK-007
+
+PARTNUMBER
+----------
+BRK-008
+BRK-009
+BRK-010
+BRK-011
+CAB-001
+CAB-003
+CAB-005
+CAB-006
+CAB-007
+CAB-008
+ICAB-001
+
+PARTNUMBER
+----------
+ICAB-002
+ICAB-003
+ICAB-004
+ICAB-005
+ICAB-006
+ICAB-007
+ICAB-008
+POW-002
+POW-003
+
+Question 23
+PARTNUMBER
+----------
+ADT-002
+BRK-006
+CAB-002
+CAB-004
+POW-001
+
+Question 24
+PARTNUMBER
+----------
+ADT-003
+ADT-004
+ADT-005
+ADT-006
+ADT-007
+BRK-002
+BRK-003
+BRK-004
+BRK-005
+BRK-007
+BRK-008
+
+PARTNUMBER
+----------
+BRK-009
+BRK-010
+BRK-011
+CAB-001
+CAB-003
+CAB-005
+CAB-006
+CAB-007
+CAB-008
+ICAB-001
+ICAB-002
+
+PARTNUMBER
+----------
+ICAB-003
+ICAB-004
+ICAB-005
+ICAB-006
+ICAB-007
+ICAB-008
+POW-002
+POW-003
+
+Question 25
+PARTNUMBER
+----------
+ADT-002
+BRK-001
+BRK-006
+CAB-002
+CAB-004
+POW-001
+
+
+Question 26          
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Allison         Roland              
+Austin          Ortman              
+Beth            Zobitz              
+Calie           Zollman             
+Charles         Jones               
+David           Deppe               
+David           Keck                
+Edna            Lilley              
+Gabrielle       Stevenson           
+Gary            German              
+Gregory         Hettinger           
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Jack            Barrick             
+Jack            Brose               
+Jamie           Osman               
+Jason           Krasner             
+Jason           Wendling            
+Jim             Manaugh             
+Joanne          Rosner              
+Joseph          Platt               
+Karen           Mangus              
+Kathleen        Xolo                
+Kathryn         Deagen              
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Kathy           Gunderson           
+Kelly           Jordan              
+Kristen         Gustavel            
+Kristey         Moore               
+Kristy          Moore               
+Laura           Rodgers             
+Marla           Reeder              
+Meghan          Tyrie               
+Melissa         Alvarez             
+Michael         Abbott              
+Michael         Emore               
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Michelle        Nairn               
+Nicholas        Albregts            
+Patricha        Underwood           
+Paul            Eckelman            
+Phil            Reece               
+Rita            Bush                
+Ronald          Day                 
+Ryan            Stahley             
+Sherman         Cheswick            
+Steve           Cochran             
+Steve           Hess                
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Steven          Hickman             
+Tina            Yates               
+Todd            Vigus   
+
+Question 27
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Allison         Roland              
+Charles         Jones               
+Jim             Manaugh             
+Phil            Reece               
+Ryan            Stahley             
+
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Allison         Roland              
+Austin          Ortman              
+Beth            Zobitz              
+Calie           Zollman             
+Charles         Jones               
+David           Deppe               
+David           Keck                
+Edna            Lilley              
+Gabrielle       Stevenson           
+Gary            German              
+Gregory         Hettinger           
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Jack            Barrick             
+Jack            Brose               
+Jamie           Osman               
+Jason           Krasner             
+Jason           Wendling            
+Jim             Manaugh             
+Joanne          Rosner              
+Joseph          Platt               
+Karen           Mangus              
+Kathleen        Xolo                
+Kathryn         Deagen              
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Kathy           Gunderson           
+Kelly           Jordan              
+Kristen         Gustavel            
+Kristey         Moore               
+Kristy          Moore               
+Laura           Rodgers             
+Marla           Reeder              
+Meghan          Tyrie               
+Melissa         Alvarez             
+Michael         Abbott              
+Michael         Emore               
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Michelle        Nairn               
+Nicholas        Albregts            
+Patricha        Underwood           
+Paul            Eckelman            
+Phil            Reece               
+Rita            Bush                
+Ronald          Day                 
+Ryan            Stahley             
+Sherman         Cheswick            
+Steve           Cochran             
+Steve           Hess                
+
+FIRSTNAME       LASTNAME            
+--------------- --------------------
+Steven          Hickman             
+Tina            Yates               
+Todd            Vigus      
+
+Question 28
+NAME                                     CUSTOMERID ORDERID   
+---------------------------------------- ---------- ----------
+BMA Advertising Design                   C-300006             
+Computer Consultants                     C-300040             
+Security Installation                    C-300062             
+Kaleta, Don                              I-300028             
+Wolfe, Thomas                            I-300149        
+*/    

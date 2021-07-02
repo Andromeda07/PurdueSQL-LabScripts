@@ -1,0 +1,563 @@
+-- Part A
+-- Question 1a
+Create or replace procedure HELLO_WORLD
+as
+v_output Varchar2(35) := 'Hello World';
+Begin
+dbms_output.put_line(v_output);
+end Hello_world;
+/
+-- Question 1b
+execute Hello_world;
+/
+-- Question 1c
+-- Anonymous blocks run where they are written, while named blocks can be called again in different places in the code
+/
+-- Question 2
+CREATE OR REPLACE PROCEDURE hello_world AS
+    v_output   VARCHAR2(35) := 'Hello World';
+BEGIN
+    dbms_output.put_line(v_output);
+END hello_world;
+/
+-- Question 3a
+Create or replace procedure HELLO_WORLD
+(p_name IN varchar2)
+as
+v_output Varchar2(35);
+Begin
+v_output := 'Hello '||p_name;
+dbms_output.put_line(v_output);
+end Hello_World;
+/
+-- Question 3b
+Create or replace procedure HELLO_WORLD
+(p_name IN varchar2)
+as
+v_output Varchar2(35);
+Execute hello_world('World');
+/
+-- Question 3c
+Execute hello_world('John');
+/
+-- Question 3d
+Execute hello_world('World procedure. I enjoy SQL so much. I am not lying');
+/
+-- Question 3e
+Create or replace procedure HELLO_WORLD
+(p_name IN varchar2)
+as
+v_output Varchar2(100);
+Begin
+v_output := 'Hello '||p_name;
+dbms_output.put_line(v_output);
+end Hello_World;
+/
+-- Question 3f
+Execute hello_world('World procedure. I enjoy SQL so much. I am not lying');
+/
+-- Question 4a
+CREATE OR REPLACE PROCEDURE hello_world
+(
+p_greeting in varchar2,
+p_name in varchar2
+)
+AS
+    v_output   VARCHAR2(35);
+BEGIN
+v_output := p_greeting||' '||p_name;
+    dbms_output.put_line(v_output);
+END hello_world;
+/
+-- Question 4b
+execute hello_world('Hello','World');
+/
+-- Question 4c
+execute hello_world('World');
+/
+-- Question 4d
+execute hello_world('Goodbye', 'Hal');
+/
+-- Question 4e
+execute hello_world('Hello', null);
+/
+-- Question 5a
+CREATE OR REPLACE function Number_of_Employees
+return number
+as
+v_number_of_employees number := 0;
+begin
+select count(*) into v_number_of_employees from employee;
+return v_number_of_employees;
+end number_of_employees;
+/
+-- Question 5b
+select number_of_employees from dual;
+/
+-- Question 6a
+CREATE OR REPLACE function Number_of_Employees
+(p_jobtitle in varchar2)
+return number
+as
+v_number_of_employees number := 0;
+begin
+select count(*) into v_number_of_employees 
+from employee
+where jobtitle = p_jobtitle;
+return v_number_of_employees;
+end number_of_employees;
+/
+-- Question 6b
+select number_of_employees('Engineer') from dual;
+/
+-- Question 6c
+CREATE OR REPLACE function Number_of_Employees
+(p_jobtitle in employee.jobtitle%type)
+return number
+as
+v_number_of_employees number := 0;
+begin
+select count(*) into v_number_of_employees 
+from employee
+where trim(upper(jobtitle)) = trim(upper(p_jobtitle));
+return v_number_of_employees;
+end number_of_employees;
+/
+-- Question 6d
+select number_of_employees('engineer') from dual;
+/
+-- Question 6e
+select number_of_employees('dba') from dual;
+/
+-- Question 6f
+select number_of_employees('DBA') from dual;
+/
+-- Question 6g
+select number_of_employees('chief sales officer') from dual;
+/
+-- Question 6h
+select number_of_employees('   chief sales officer   ') from dual;
+/
+-- Question 6i
+select number_of_employees('CEO') from dual;
+/
+-- Question 7a
+Create or replace procedure SIMPLE_LOOP_EXAMPLE
+as
+lcounter number;
+v_current_date number;
+begin
+v_current_date := to_number(to_char(sysdate, 'DD'));
+
+lcounter :=1;
+loop
+dbms_output.putline(lcounter);
+if lcounter >= v_current_date then
+    exit;
+else
+    lcounter := lcounter+1;
+end if;
+end loop;
+
+end Simple_loop_example;
+/
+-- Question 7b
+execute simple_loop_example;
+/
+-- Question 7c
+-- the Simple_loop_example prints numbers starting at 1 until it prints the number that is the date then exits the loop (today is the 23rd)
+/
+-- Question 7d
+-- the loop uses an if statement and an exit command if the counter hits the exit condition
+/
+-- Question 7e
+Create or replace procedure SIMPLE_LOOP_EXAMPLE
+as
+    lcounter number;
+    v_current_date number;
+begin
+    v_current_date := to_number(to_char(sysdate, 'DD'));
+
+    lcounter :=1;
+    loop
+        dbms_output.put_line(lcounter);
+        lcounter := lcounter+1;
+        exit when lcounter > v_current_date;
+    end loop;
+
+end SIMPLE_LOOP_EXAMPLE;
+
+/
+
+execute simple_loop_example;
+/
+-- Question 8a
+Create or replace procedure While_LOOP_EXAMPLE
+as
+    lcounter number;
+    v_current_date number;
+begin
+    v_current_date := to_number(to_char(sysdate, 'DD'));
+
+    lcounter :=1;
+    while lcounter <= v_current_date loop
+        dbms_output.put_line(lcounter);
+        lcounter := lcounter+1;
+    end loop;
+
+end WHILE_LOOP_EXAMPLE;
+/
+-- Question 8b
+execute while_loop_example;
+/
+-- Question 9a
+Create or replace procedure For_LOOP_EXAMPLE
+as
+    lcounter number;
+    v_current_date number;
+begin
+    v_current_date := to_number(to_char(sysdate, 'DD'));
+
+    for lcounter in 1..v_current_date loop
+        dbms_output.put_line(lcounter);
+    end loop;
+
+end for_LOOP_EXAMPLE;
+/
+-- Question 9b
+execute for_loop_example;
+/
+-- Question 10a
+-- The execute privilege allows a user to run a function or procedure (https://docs.oracle.com/database/121/TTSQL/privileges.htm#TTSQL341)
+/
+-- Question 10b
+grant execute on number_of_employees to CNIT372TA;
+/
+-- Question 10c
+grant execute on Hello_world to CNIT372TA;
+grant execute on simple_loop_example to CNIT372TA;
+grant execute on while_loop_example to CNIT372TA;
+grant execute on for_loop_example to CNIT372TA;
+/
+-- Question 11a
+revoke execute on number_of_employees from CNIT372TA;
+/
+-- Question 11b
+drop procedure simple_loop_example;
+
+/
+
+Create or replace procedure SIMPLE_LOOP_EXAMPLE
+as
+    lcounter number;
+    v_current_date number;
+begin
+    v_current_date := to_number(to_char(sysdate, 'DD'));
+
+    lcounter :=1;
+    loop
+        dbms_output.put_line(lcounter);
+        lcounter := lcounter+1;
+        exit when lcounter > v_current_date;
+    end loop;
+
+end SIMPLE_LOOP_EXAMPLE;
+
+/
+
+select * from user_tab_privs;
+/
+-- Question 11c
+-- yes.
+/
+-- Question 11d
+Create or replace procedure While_LOOP_EXAMPLE
+as
+    lcounter number;
+    v_current_date number;
+begin
+    v_current_date := to_number(to_char(sysdate, 'DD'));
+
+    lcounter :=1;
+    while lcounter <= v_current_date loop
+        dbms_output.put_line(lcounter);
+        lcounter := lcounter+1;
+    end loop;
+
+end WHILE_LOOP_EXAMPLE;
+
+/
+
+select * from user_tab_privs;
+/
+-- Question 11e
+-- No.
+/
+-- Question 12
+drop procedure Hello_world;
+drop procedure Simple_loop_example;
+drop procedure while_loop_example;
+drop procedure for_loop_example;
+drop function number_of_employees;
+/
+-- Question 13a
+-- It requires 2 parameters, a greeting and a name
+/
+-- Question 13b
+execute CNIT372TA.Hello_World('Hello', 'Sunshine');
+/
+-- Question 14a
+create or replace function DAYS_AWAY
+(p_date in date)
+return number
+as
+v_days number := 0;
+begin
+v_days := p_date - Current_Date;
+return round(v_days);
+end;
+/
+-- Question 14b
+select Days_Away(to_date('2019/11/15','yyyy/mm/dd')) from dual;
+select Days_Away(to_date('2019/10/15','yyyy/mm/dd')) from dual;
+/
+-- Question 15a
+create or replace procedure DAY_OF_THE_WEEK
+(p_date in date)
+as
+begin
+dbms_output.put_line(to_char(p_date, 'Day'));
+dbms_output.put_line(to_char(p_date-1, 'Day'));
+dbms_output.put_line(to_char(p_date+1, 'Day'));
+end;
+/
+
+execute DAY_OF_THE_WEEK(to_date('2019/11/15','yyyy/mm/dd'));
+
+/*Results
+
+Question 1a
+Procedure HELLO_WORLD compiled is output to the ScriptOutput
+
+Question 1b
+DBMS output: Hello World
+
+Question 3b
+Hello World
+
+Question 3c
+Hello John
+
+Question 3d
+Error starting at line : 12 in command -
+BEGIN hello_world('World procedure. I enjoy SQL so much. I am not lying'); END;
+Error report -
+ORA-06502: PL/SQL: numeric or value error: character string buffer too small
+ORA-06512: at "WAGNE208.HELLO_WORLD", line 6
+ORA-06512: at line 1
+06502. 00000 -  "PL/SQL: numeric or value error%s"
+*Cause:    An arithmetic, numeric, string, conversion, or constraint error
+           occurred. For example, this error occurs if an attempt is made to
+           assign the value NULL to a variable declared NOT NULL, or if an
+           attempt is made to assign an integer larger than 99 to a variable
+           declared NUMBER(2).
+*Action:   Change the data, how it is manipulated, or how it is declared so
+           that values do not violate constraints.
+
+Question 3f
+Hello World procedure. I enjoy SQL so much. I am not lying
+
+Question 4b
+Hello World
+
+Question 4c
+Error starting at line : 15 in command -
+BEGIN hello_world('World'); END;
+Error report -
+ORA-06550: line 1, column 59:
+PLS-00306: wrong number or types of arguments in call to 'HELLO_WORLD'
+ORA-06550: line 1, column 59:
+PL/SQL: Statement ignored
+06550. 00000 -  "line %s, column %s:\n%s"
+*Cause:    Usually a PL/SQL compilation error.
+*Action:
+
+Question 4d
+Goodbye Hal
+
+Question 4e
+Hello
+
+Question 5b
+NUMBER_OF_EMPLOYEES
+-------------------
+                 40
+
+Question 5d
+NUMBER_OF_EMPLOYEES('ENGINEER')
+-------------------------------
+                              5
+
+Question 6d
+NUMBER_OF_EMPLOYEES('ENGINEER')
+-------------------------------
+                              5
+
+Question 6e
+NUMBER_OF_EMPLOYEES('DBA')
+--------------------------
+                         1
+
+Question 6f
+NUMBER_OF_EMPLOYEES('DBA')
+--------------------------
+                         1
+
+Question 6g
+NUMBER_OF_EMPLOYEES('CHIEFSALESOFFICER')
+----------------------------------------
+                                       1
+
+Question 6h
+NUMBER_OF_EMPLOYEES('CHIEFSALESOFFICER')
+----------------------------------------
+                                       1
+
+Question 6i
+NUMBER_OF_EMPLOYEES('CEO')
+--------------------------
+                         0
+
+Question 7b
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+
+Question 7e
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+
+Question 8b
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+
+Question 9b
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+
+Question 11b
+GRANTEE                                                                                                                          OWNER                                                                                                                            TABLE_NAME                                                                                                                       GRANTOR                                                                                                                          PRIVILEGE                                GRA HIE COM TYPE                     INH
+-------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- ---------------------------------------- --- --- --- ------------------------ ---
+CNIT372TA                                                                                                                        WAGNE208                                                                                                                         HELLO_WORLD                                                                                                                      WAGNE208                                                                                                                         EXECUTE                                  NO  NO  NO  PROCEDURE                NO 
+CNIT372TA                                                                                                                        WAGNE208                                                                                                                         WHILE_LOOP_EXAMPLE                                                                                                               WAGNE208                                                                                                                         EXECUTE                                  NO  NO  NO  PROCEDURE                NO 
+CNIT372TA                                                                                                                        WAGNE208                                                                                                                         FOR_LOOP_EXAMPLE                                                                                                                 WAGNE208                                                                                                                         EXECUTE                                  NO  NO  NO  PROCEDURE                NO 
+PUBLIC                                                                                                                           SYS                                                                                                                              WAGNE208                                                                                                                         WAGNE208                                                                                                                         INHERIT PRIVILEGES                       NO  NO  NO  USER                     NO 
+
+Question 11d
+GRANTEE                                                                                                                          OWNER                                                                                                                            TABLE_NAME                                                                                                                       GRANTOR                                                                                                                          PRIVILEGE                                GRA HIE COM TYPE                     INH
+-------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- ---------------------------------------- --- --- --- ------------------------ ---
+CNIT372TA                                                                                                                        WAGNE208                                                                                                                         HELLO_WORLD                                                                                                                      WAGNE208                                                                                                                         EXECUTE                                  NO  NO  NO  PROCEDURE                NO 
+CNIT372TA                                                                                                                        WAGNE208                                                                                                                         WHILE_LOOP_EXAMPLE                                                                                                               WAGNE208                                                                                                                         EXECUTE                                  NO  NO  NO  PROCEDURE                NO 
+CNIT372TA                                                                                                                        WAGNE208                                                                                                                         FOR_LOOP_EXAMPLE                                                                                                                 WAGNE208                                                                                                                         EXECUTE                                  NO  NO  NO  PROCEDURE                NO 
+PUBLIC                                                                                                                           SYS                                                                                                                              WAGNE208                                                                                                                         WAGNE208                                                                                                                         INHERIT PRIVILEGES                       NO  NO  NO  USER                     NO 
+
+Question 13b
+Hello Sunshine
+
+Question 14b
+DAYS_AWAY(TO_DATE('2019/11/15','YYYY/MM/DD'))
+---------------------------------------------
+                                           16
+
+
+DAYS_AWAY(TO_DATE('2019/10/15','YYYY/MM/DD'))
+---------------------------------------------
+                                          -15
+
+Question 15
+Friday   
+Thursday 
+Saturday
